@@ -1,967 +1,944 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackED- Attendance Management System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1e40af',
-                        secondary: '#3b82f6',
-                        accent: '#6366f1',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444'
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-gray-50">
-    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-primary mb-2">TrackED</h1>
-                <p class="text-gray-600">Student Attendance Management System</p>
-            </div>
-            
-            <div class="flex mb-6 bg-gray-100 rounded-lg p-1">
-                <button id="loginTab" class="flex-1 py-2 text-center rounded-md bg-primary text-white transition-all">
-                    Sign In
-                </button>
-                <button id="registerTab" class="flex-1 py-2 text-center rounded-md text-gray-600 transition-all">
-                    Sign Up
-                </button>
-            </div>
-
-            <form id="loginForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="loginEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required value="student@attendease.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="loginPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required value="password123">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                    <select id="loginRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Sign In
-                </button>
-            </form>
-
-            <form id="registerForm" class="space-y-4 hidden">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                        <input type="text" id="regFirstName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                        <input type="text" id="regLastName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="regEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="regPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                    <select id="regRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div id="studentFields" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
-                        <input type="text" id="regStudentId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                        <select id="regClass" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="10A">Class 10A</option>
-                            <option value="10B">Class 10B</option>
-                            <option value="11A">Class 11A</option>
-                            <option value="11B">Class 11B</option>
-                            <option value="12A">Class 12A</option>
-                            <option value="12B">Class 12B</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="teacherFields" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                        <input type="text" id="regEmpId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                        <select id="regSubject" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Sign Up
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div id="appContainer" class="hidden min-h-screen bg-gray-50">
-        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-            <div class="px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold text-primary">TrackED</h1>
-                        <div id="classSelector" class="ml-8 hidden">
-                            <select class="px-3 py-1 border border-gray-300 rounded-md text-sm">
-                                <option>Select Class/Subject</option>
-                                <option>Class 10A - Mathematics</option>
-                                <option>Class 10B - Physics</option>
-                                <option>Class 11A - Chemistry</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <button id="faceIdBtn" class="hidden bg-success text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
-                            <i class="fas fa-camera mr-2"></i>Mark Attendance
-                        </button>
-                        
-                        <div class="relative">
-                            <button id="notificationBtn" class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-bell text-xl"></i>
-                                <span class="absolute -top-2 -right-2 bg-danger text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
-                            </button>
-                        </div>
-                        
-                        <div class="relative">
-                            <button id="profileBtn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                                <img class="h-8 w-8 rounded-full bg-primary" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="Profile">
-                                <span id="userName">User</span>
-                                <i class="fas fa-chevron-down text-sm"></i>
-                            </button>
-                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                                <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <div class="flex">
-            <div class="w-64 bg-white shadow-sm h-screen sticky top-16">
-                <nav class="mt-8">
-                    <div class="px-4 space-y-2" id="sidebarMenu">
-                        </div>
-                </nav>
-            </div>
-
-            <main class="flex-1 p-6">
-                <div id="studentDashboard" class="hidden">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Student Dashboard</h2>
-                        <p class="text-gray-600">Welcome back! Here's your attendance overview.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-success bg-opacity-10">
-                                    <i class="fas fa-check text-success text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Today's Status</p>
-                                    <p class="text-lg font-semibold text-success">Present</p>
-                                    <p class="text-xs text-gray-500">Marked at 09:15 AM</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-primary bg-opacity-10">
-                                    <i class="fas fa-percentage text-primary text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Overall Attendance</p>
-                                    <p class="text-lg font-semibold text-primary">87.5%</p>
-                                    <p class="text-xs text-gray-500">Above average</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-warning bg-opacity-10">
-                                    <i class="fas fa-exclamation-triangle text-warning text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Low Attendance</p>
-                                    <p class="text-lg font-semibold text-warning">Physics: 68%</p>
-                                    <p class="text-xs text-gray-500">Needs attention</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-accent bg-opacity-10">
-                                    <i class="fas fa-calendar-week text-accent text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">This Week</p>
-                                    <p class="text-lg font-semibold text-accent">18/20</p>
-                                    <p class="text-xs text-gray-500">Classes attended</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Subject-wise Attendance</h3>
-                            <canvas id="studentAttendanceChart"></canvas>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-check-circle text-success mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium">Mathematics - Present</p>
-                                            <p class="text-xs text-gray-500">Today, 09:15 AM</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-times-circle text-danger mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium">Physics - Absent</p>
-                                            <p class="text-xs text-gray-500">Yesterday, 10:30 AM</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-check-circle text-success mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium">Chemistry - Present</p>
-                                            <p class="text-xs text-gray-500">Yesterday, 11:45 AM</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold mb-4">Download Reports</h3>
-                        <div class="flex space-x-4">
-                            <button class="bg-danger text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
-                                <i class="fas fa-file-pdf mr-2"></i>Download PDF
-                            </button>
-                            <button class="bg-success text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
-                                <i class="fas fa-file-excel mr-2"></i>Download Excel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="teacherDashboard" class="hidden">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Teacher Dashboard</h2>
-                        <p class="text-gray-600">Manage your classes and track student attendance.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-primary bg-opacity-10">
-                                    <i class="fas fa-users text-primary text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Total Students</p>
-                                    <p class="text-lg font-semibold text-primary">156</p>
-                                    <p class="text-xs text-gray-500">Across all classes</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-success bg-opacity-10">
-                                    <i class="fas fa-user-check text-success text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Present Today</p>
-                                    <p class="text-lg font-semibold text-success">142</p>
-                                    <p class="text-xs text-gray-500">91.0% attendance</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-warning bg-opacity-10">
-                                    <i class="fas fa-shield-alt text-warning text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Proxy Alerts</p>
-                                    <p class="text-lg font-semibold text-warning">3</p>
-                                    <p class="text-xs text-gray-500">Needs review</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-accent bg-opacity-10">
-                                    <i class="fas fa-chalkboard-teacher text-accent text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Classes Today</p>
-                                    <p class="text-lg font-semibold text-accent">4/5</p>
-                                    <p class="text-xs text-gray-500">Completed</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Today's Attendance - Class 10A</h3>
-                            <div class="space-y-3 max-h-64 overflow-y-auto">
-                                <div class="flex items-center justify-between p-3 border rounded-lg">
-                                    <div class="flex items-center">
-                                        <img class="h-8 w-8 rounded-full bg-gray-300" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='gray'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="">
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium">John Smith</p>
-                                            <p class="text-xs text-gray-500">ID: ST001</p>
-                                        </div>
-                                    </div>
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-success" checked>
-                                        <span class="ml-2 text-sm text-success">Present</span>
-                                    </label>
-                                </div>
-                                <div class="flex items-center justify-between p-3 border rounded-lg">
-                                    <div class="flex items-center">
-                                        <img class="h-8 w-8 rounded-full bg-gray-300" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='gray'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="">
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium">Sarah Johnson</p>
-                                            <p class="text-xs text-gray-500">ID: ST002</p>
-                                        </div>
-                                    </div>
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-danger">
-                                        <span class="ml-2 text-sm text-danger">Absent</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <button class="w-full mt-4 bg-primary text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Save Attendance
-                            </button>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Class Analytics</h3>
-                            <canvas id="teacherAnalyticsChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold mb-4">Proxy Detection Alerts</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <div class="flex items-center">
-                                    <i class="fas fa-exclamation-triangle text-danger mr-3"></i>
-                                    <div>
-                                        <p class="text-sm font-medium">Suspicious Activity Detected</p>
-                                        <p class="text-xs text-gray-500">Student: Mike Davis | Time: 09:45 AM | Class: 10B</p>
-                                    </div>
-                                </div>
-                                <div class="flex space-x-2">
-                                    <button class="bg-success text-white px-3 py-1 text-xs rounded hover:bg-green-600">Approve</button>
-                                    <button class="bg-danger text-white px-3 py-1 text-xs rounded hover:bg-red-600">Flag</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="adminDashboard" class="hidden">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
-                        <p class="text-gray-600">Complete overview of the institution's attendance system.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-primary bg-opacity-10">
-                                    <i class="fas fa-graduation-cap text-primary text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Total Students</p>
-                                    <p class="text-lg font-semibold text-primary">1,247</p>
-                                    <p class="text-xs text-success">+23 this month</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-success bg-opacity-10">
-                                    <i class="fas fa-chalkboard-teacher text-success text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Total Teachers</p>
-                                    <p class="text-lg font-semibold text-success">47</p>
-                                    <p class="text-xs text-success">Active</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-accent bg-opacity-10">
-                                    <i class="fas fa-chart-line text-accent text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">Overall Attendance</p>
-                                    <p class="text-lg font-semibold text-accent">89.2%</p>
-                                    <p class="text-xs text-success">+2.1% from last month</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-warning bg-opacity-10">
-                                    <i class="fas fa-bell text-warning text-xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm text-gray-600">System Alerts</p>
-                                    <p class="text-lg font-semibold text-warning">12</p>
-                                    <p class="text-xs text-gray-500">Requires attention</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Institution-wide Attendance Trends</h3>
-                            <canvas id="adminOverallChart"></canvas>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Students Below 75% Attendance</h3>
-                            <div class="space-y-3 max-h-64 overflow-y-auto">
-                                <div class="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <div>
-                                        <p class="text-sm font-medium text-red-800">Alice Brown</p>
-                                        <p class="text-xs text-gray-500">Class 10A • Attendance: 68%</p>
-                                    </div>
-                                    <span class="bg-danger text-white text-xs px-2 py-1 rounded-full">Critical</span>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div>
-                                        <p class="text-sm font-medium text-yellow-800">Robert Wilson</p>
-                                        <p class="text-xs text-gray-500">Class 11B • Attendance: 72%</p>
-                                    </div>
-                                    <span class="bg-warning text-white text-xs px-2 py-1 rounded-full">Warning</span>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div>
-                                        <p class="text-sm font-medium text-yellow-800">Emma Davis</p>
-                                        <p class="text-xs text-gray-500">Class 12A • Attendance: 74%</p>
-                                    </div>
-                                    <span class="bg-warning text-white text-xs px-2 py-1 rounded-full">Warning</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Teacher Performance Analytics</h3>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Teacher</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Classes</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Avg. Attendance</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-200">
-                                        <tr>
-                                            <td class="px-4 py-2 text-sm">Dr. Smith</td>
-                                            <td class="px-4 py-2 text-sm">5</td>
-                                            <td class="px-4 py-2 text-sm">
-                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">92%</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2 text-sm">Prof. Johnson</td>
-                                            <td class="px-4 py-2 text-sm">3</td>
-                                            <td class="px-4 py-2 text-sm">
-                                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">85%</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2 text-sm">Ms. Davis</td>
-                                            <td class="px-4 py-2 text-sm">4</td>
-                                            <td class="px-4 py-2 text-sm">
-                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">89%</span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Fraud/Proxy Detection Logs</h3>
-                            <div class="space-y-3 max-h-64 overflow-y-auto">
-                                <div class="flex items-start justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-shield-alt text-danger mt-1 mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium">Multiple Login Attempt</p>
-                                            <p class="text-xs text-gray-500">Student: John Doe | Time: 09:30 AM</p>
-                                            <p class="text-xs text-gray-500">Flagged by AI system</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs text-red-600 font-medium">High Risk</span>
-                                </div>
-                                <div class="flex items-start justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-exclamation-triangle text-warning mt-1 mr-3"></i>
-                                        <div>
-                                            <p class="text-sm font-medium">Unusual Location</p>
-                                            <p class="text-xs text-gray-500">Student: Jane Smith | Time: 10:15 AM</p>
-                                            <p class="text-xs text-gray-500">Different IP location detected</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs text-yellow-600 font-medium">Medium Risk</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold mb-4">System Settings</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Attendance Threshold</label>
-                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                    <option>75%</option>
-                                    <option>80%</option>
-                                    <option>85%</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Grace Period</label>
-                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                    <option>15 minutes</option>
-                                    <option>30 minutes</option>
-                                    <option>45 minutes</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Notification Frequency</label>
-                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                    <option>Daily</option>
-                                    <option>Weekly</option>
-                                    <option>Monthly</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button class="mt-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                            Save Settings
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <div id="notificationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Notifications</h3>
-                <button id="closeNotificationModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="space-y-3">
-                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm font-medium text-yellow-800">Low Attendance Alert</p>
-                    <p class="text-xs text-gray-600">Your Physics attendance is below 75%</p>
-                </div>
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p class="text-sm font-medium text-blue-800">Exam Reminder</p>
-                    <p class="text-xs text-gray-600">Mathematics exam on Friday</p>
-                </div>
-                <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p class="text-sm font-medium text-green-800">Good Attendance</p>
-                    <p class="text-xs text-gray-600">Great job maintaining 90% attendance!</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="faceIdModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div class="text-center">
-                <div class="mb-4">
-                    <i class="fas fa-camera text-primary text-6xl"></i>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Face ID Attendance</h3>
-                <p class="text-gray-600 mb-4">Position your face in the camera frame</p>
-                <div class="w-48 h-48 mx-auto bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                    <i class="fas fa-user text-gray-400 text-4xl"></i>
-                </div>
-                <div class="flex space-x-4">
-                    <button id="cancelFaceId" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition-colors">
-                        Cancel
-                    </button>
-                    <button id="captureFaceId" class="flex-1 bg-primary text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-                        Capture
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-    // --- Element Selections ---
-    const authModal = document.getElementById('authModal');
-    const appContainer = document.getElementById('appContainer');
-
-    // Auth Forms
-    const loginTab = document.getElementById('loginTab');
-    const registerTab = document.getElementById('registerTab');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const loginRoleSelect = document.getElementById('loginRole');
-    const regRoleSelect = document.getElementById('regRole');
-    const studentFields = document.getElementById('studentFields');
-    const teacherFields = document.getElementById('teacherFields');
-
-    // Dashboards
-    const dashboards = {
-        student: document.getElementById('studentDashboard'),
-        teacher: document.getElementById('teacherDashboard'),
-        admin: document.getElementById('adminDashboard'),
-    };
-
-    // Top Navigation
-    const classSelector = document.getElementById('classSelector');
-    const faceIdBtn = document.getElementById('faceIdBtn');
-    const notificationBtn = document.getElementById('notificationBtn');
-    const profileBtn = document.getElementById('profileBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userNameSpan = document.getElementById('userName');
-
-    // Modals
-    const notificationModal = document.getElementById('notificationModal');
-    const closeNotificationModal = document.getElementById('closeNotificationModal');
-    const faceIdModal = document.getElementById('faceIdModal');
-    const cancelFaceIdBtn = document.getElementById('cancelFaceId');
-    const captureFaceIdBtn = document.getElementById('captureFaceId');
-
-    // Sidebar
-    const sidebarMenu = document.getElementById('sidebarMenu');
-    
-    // Chart instances
-    let chartInstances = {};
-
-    // --- Auth Modal Logic ---
-
-    loginTab.addEventListener('click', () => {
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-        loginTab.classList.add('bg-primary', 'text-white');
-        registerTab.classList.remove('bg-primary', 'text-white');
-    });
-
-    registerTab.addEventListener('click', () => {
-        registerForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-        registerTab.classList.add('bg-primary', 'text-white');
-        loginTab.classList.remove('bg-primary', 'text-white');
-    });
-
-    regRoleSelect.addEventListener('change', (e) => {
-        const role = e.target.value;
-        if (role === 'student') {
-            studentFields.classList.remove('hidden');
-            teacherFields.classList.add('hidden');
-        } else if (role === 'teacher') {
-            teacherFields.classList.remove('hidden');
-            studentFields.classList.add('hidden');
-        } else {
-            studentFields.classList.add('hidden');
-            teacherFields.classList.add('hidden');
-        }
-    });
-
-    // --- Authentication Simulation ---
-
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const role = loginRoleSelect.value;
-        const userNames = {
-            student: 'John Doe',
-            teacher: 'Dr. Smith',
-            admin: 'Admin User'
-        };
-        showDashboard(role, userNames[role]);
-    });
-    
-    registerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Registration successful! Please log in.');
-        loginTab.click(); // Switch to login tab
-    });
-
-    // --- Dashboard and UI Logic ---
-
-    function showDashboard(role, userName) {
-        // Hide auth modal and show app
-        authModal.style.opacity = 0;
-        authModal.querySelector('div').classList.remove('scale-100');
-        authModal.querySelector('div').classList.add('scale-95');
-        setTimeout(() => {
-            authModal.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-        }, 300);
-
-        // Hide all dashboards first
-        Object.values(dashboards).forEach(db => db.classList.add('hidden'));
-
-        // Show the correct dashboard
-        if (dashboards[role]) {
-            dashboards[role].classList.remove('hidden');
-        }
-
-        // Update UI based on role
-        userNameSpan.textContent = userName;
-        faceIdBtn.classList.toggle('hidden', role !== 'student');
-        classSelector.classList.toggle('hidden', role !== 'teacher');
-        
-        populateSidebar(role);
-        initCharts(role);
-    }
-    
-    // --- Sidebar Menu Population ---
-    
-    const menuItems = {
-        student: [
-            { icon: 'fa-tachometer-alt', text: 'Dashboard' },
-            { icon: 'fa-calendar-check', text: 'My Attendance' },
-            { icon: 'fa-book', text: 'Courses' },
-            { icon: 'fa-file-alt', text: 'Reports' },
-            { icon: 'fa-cog', text: 'Settings' }
-        ],
-        teacher: [
-            { icon: 'fa-tachometer-alt', text: 'Dashboard' },
-            { icon: 'fa-users', text: 'My Classes' },
-            { icon: 'fa-calendar-plus', text: 'Mark Attendance' },
-            { icon: 'fa-bell', text: 'Alerts' },
-            { icon: 'fa-chart-bar', text: 'Analytics' }
-        ],
-        admin: [
-            { icon: 'fa-tachometer-alt', text: 'Dashboard' },
-            { icon: 'fa-users-cog', text: 'Manage Users' },
-            { icon: 'fa-school', text: 'Manage Classes' },
-            { icon: 'fa-chart-pie', text: 'Overall Analytics' },
-            { icon: 'fa-flag', text: 'Reports & Logs' },
-            { icon: 'fa-cogs', text: 'System Settings' }
-        ]
-    };
-
-    function populateSidebar(role) {
-        const items = menuItems[role] || [];
-        sidebarMenu.innerHTML = items.map((item, index) => `
-            <a href="#" class="${index === 0 ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                <i class="fas ${item.icon} mr-3"></i>
-                ${item.text}
-            </a>
-        `).join('');
-    }
-
-    // --- Interactive UI Elements ---
-
-    profileBtn.addEventListener('click', () => {
-        profileDropdown.classList.toggle('hidden');
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        window.location.reload(); // Simple way to reset to login
-    });
-    
-    notificationBtn.addEventListener('click', () => notificationModal.classList.remove('hidden'));
-    closeNotificationModal.addEventListener('click', () => notificationModal.classList.add('hidden'));
-    
-    faceIdBtn.addEventListener('click', () => faceIdModal.classList.remove('hidden'));
-    cancelFaceIdBtn.addEventListener('click', () => faceIdModal.classList.add('hidden'));
-    captureFaceIdBtn.addEventListener('click', () => {
-        alert('Attendance marked successfully!');
-        faceIdModal.classList.add('hidden');
-    });
-
-    // Close dropdown when clicking outside
-    window.addEventListener('click', (e) => {
-        if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
-            profileDropdown.classList.add('hidden');
-        }
-    });
-
-    // --- Chart.js Initialization ---
-    
-    function destroyChart(canvasId) {
-        if(chartInstances[canvasId]){
-            chartInstances[canvasId].destroy();
-        }
-    }
-
-    function initCharts(role) {
-        if (role === 'student') initStudentChart();
-        if (role === 'teacher') initTeacherChart();
-        if (role === 'admin') initAdminChart();
-    }
-
-    function initStudentChart() {
-        const ctx = document.getElementById('studentAttendanceChart').getContext('2d');
-        destroyChart('studentAttendanceChart');
-        chartInstances['studentAttendanceChart'] = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English'],
-                datasets: [{
-                    label: 'Attendance %',
-                    data: [95, 68, 88, 92, 85],
-                    backgroundColor: ['#1e40af', '#ef4444', '#1e40af', '#1e40af', '#1e40af'],
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true, max: 100 }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-    
-    function initTeacherChart() {
-        const ctx = document.getElementById('teacherAnalyticsChart').getContext('2d');
-        destroyChart('teacherAnalyticsChart');
-        chartInstances['teacherAnalyticsChart'] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                datasets: [{
-                    label: 'Class 10A Attendance %',
-                    data: [92, 95, 88, 91, 94],
-                    borderColor: '#1e40af',
-                    backgroundColor: 'rgba(30, 64, 175, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                 scales: {
-                    y: { beginAtZero: false, max: 100 }
-                },
-                 plugins: { legend: { display: true } }
-            }
-        });
-    }
-
-    function initAdminChart() {
-        const ctx = document.getElementById('adminOverallChart').getContext('2d');
-        destroyChart('adminOverallChart');
-        chartInstances['adminOverallChart'] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Present', 'Absent', 'On Leave'],
-                datasets: [{
-                    label: 'Overall Attendance',
-                    data: [89.2, 8.3, 2.5],
-                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: false,
-                        text: 'Overall Attendance Distribution'
-                    }
-                }
-            }
-        });
-    }
-});
-</script>
-</body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>TrackED - Attendance Management System</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <!-- Font Awesome (icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1e40af",
+            secondary: "#3b82f6",
+            accent: "#6366f1",
+            success: "#10b981",
+            warning: "#f59e0b",
+            danger: "#ef4444",
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    .glass-effect { backdrop-filter: blur(10px); background-color: rgba(255,255,255,0.75); }
+    .hover-lift { transition: all 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+    /* Scrollable table container + gradient edge (light mode) */
+    .scrollable-table-container { position: relative; }
+    body:not(.dark) .scrollable-table-container::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 30px;
+      background: linear-gradient(to left, rgba(249,250,251,1), transparent);
+      pointer-events: none;
+    }
+
+    /* Sticky table headers */
+    .scrollable-table-container thead th {
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      z-index: 1;
+    }
+
+    /* Default table padding, compact on small screens */
+    .scrollable-table-container table th,
+    .scrollable-table-container table td {
+      padding: 0.75rem 1rem;
+    }
+    @media (max-width: 640px) {
+      .scrollable-table-container table th,
+      .scrollable-table-container table td {
+        padding: 0.5rem 0.75rem !important;
+        white-space: nowrap;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Dark gradient for right edge if dark mode is used */
+    body.dark .scrollable-table-container::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 30px;
+      background: linear-gradient(to left, rgba(17,24,39,1), transparent);
+      pointer-events: none;
+    }
+
+    /* Chart containers scale by height */
+    .chart-auto { height: 20rem; }
+    @media (max-width: 640px) {
+      .chart-auto { height: 16rem; }
+    }
+
+    /* Safe-area support for modern phones */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    nav.sticky { padding-top: max(0px, var(--safe-top)); }
+    .modal-safe { padding-bottom: max(1rem, calc(1rem + var(--safe-bottom))); }
+
+    /* Prevent dropdown clipping on short viewports */
+    #profileDropdown { max-height: 60vh; overflow: auto; }
+  </style>
 </head>
-<body>
-    <h1>PARTH GUPTA IS UPDATING THE WEBSITE</h1>
 
+<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen">
+  <!-- Auth Modal -->
+  <div
+    id="authModal"
+    class="fixed inset-0 bg-gradient-to-br from-blue-900/80 via-purple-900/80 to-indigo-900/80 flex items-center justify-center z-50 p-4"
+  >
+    <div
+      class="glass-effect rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 transform transition-all duration-500 scale-100 shadow-2xl border border-white/20"
+    >
+      <div class="text-center mb-6">
+        <div
+          class="bg-gradient-to-r from-blue-600 to-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+        >
+          <i class="fas fa-graduation-cap text-white text-2xl"></i>
+        </div>
+        <h1
+          class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2"
+        >
+          TrackED
+        </h1>
+        <p class="text-gray-200">Student Attendance Management System</p>
+      </div>
 
-    <h2>WE WILL BE THERE SOON✌</h2>
+      <div class="flex mb-6 bg-gray-100 rounded-xl p-1">
+        <button
+          id="loginTab"
+          class="flex-1 py-3 text-center rounded-lg bg-primary text-white transition-all duration-300 font-medium shadow-md"
+        >
+          Sign In
+        </button>
+        <button
+          id="registerTab"
+          class="flex-1 py-3 text-center rounded-lg text-gray-600 transition-all duration-300 font-medium"
+        >
+          Sign Up
+        </button>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            type="email"
+            id="loginEmail"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            required
+            value="student@tracked.com"
+          />
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Password</label>
+          <input
+            type="password"
+            id="loginPassword"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            required
+            value="password123"
+          />
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Role</label>
+          <select
+            id="loginRole"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button
+          type="submit"
+          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <form id="registerForm" class="space-y-4 hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+            <input
+              type="text"
+              id="regFirstName"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+            <input
+              type="text"
+              id="regLastName"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input
+            type="email"
+            id="regEmail"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <input
+            type="password"
+            id="regPassword"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+          <select
+            id="regRole"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <!-- Conditional student fields -->
+        <div id="studentFields" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Student ID</label>
+            <input
+              type="text"
+              id="regStudentId"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Class</label>
+            <select
+              id="regClass"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            >
+              <option value="10A">Class 10A</option>
+              <option value="10B">Class 10B</option>
+              <option value="11A">Class 11A</option>
+              <option value="11B">Class 11B</option>
+              <option value="12A">Class 12A</option>
+              <option value="12B">Class 12B</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conditional teacher fields -->
+        <div id="teacherFields" class="space-y-4 hidden">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
+            <input
+              type="text"
+              id="regEmpId"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+            <select
+              id="regSubject"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            >
+              <option value="Mathematics">Mathematics</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="English">English</option>
+              <option value="History">History</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          Create Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div class="min-h-screen">
+    <!-- Top Nav -->
+    <nav class="sticky top-0 z-40 bg-white/70 backdrop-blur border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="h-14 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button
+              id="openSidebarBtn"
+              class="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 text-gray-700"
+              aria-label="Open sidebar"
+            >
+              <i class="fas fa-bars text-lg"></i>
+            </button>
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white"
+              >
+                <i class="fas fa-check"></i>
+              </div>
+              <span class="font-semibold text-gray-800">TrackED</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2">
+              <span class="text-sm text-gray-600">Role</span>
+              <select
+                id="roleSwitcher"
+                class="px-2 py-1.5 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="relative">
+              <button
+                id="profileBtn"
+                class="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <img
+                  src="https://i.pravatar.cc/40?img=13"
+                  alt="avatar"
+                  class="w-8 h-8 rounded-full"
+                />
+                <i class="fas fa-chevron-down text-gray-500"></i>
+              </button>
+              <div
+                id="profileDropdown"
+                class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-2"
+              >
+                <div class="px-3 py-2">
+                  <p class="text-sm font-medium">Alex Johnson</p>
+                  <p class="text-xs text-gray-500">alex.johnson@example.com</p>
+                </div>
+                <hr />
+                <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm">
+                  Profile
+                </button>
+                <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm">
+                  Settings
+                </button>
+                <button id="signOutBtn" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm text-danger">
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar + Content -->
+    <div class="flex">
+      <!-- Sidebar overlay (mobile) -->
+      <div
+        id="sidebarOverlay"
+        class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"
+      ></div>
+
+      <!-- Sidebar -->
+      <aside
+        id="sidebar"
+        class="fixed md:static z-40 top-0 left-0 h-full md:h-auto w-72 md:w-64 bg-white border-r border-gray-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300"
+        aria-label="Sidebar"
+      >
+        <div class="h-14 md:hidden"></div>
+        <div class="p-4">
+          <div class="mb-4">
+            <div class="md:hidden flex items-center gap-2 mb-4">
+              <span class="font-semibold text-gray-800">Menu</span>
+              <button
+                id="closeSidebarBtn"
+                class="ml-auto inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 text-gray-700"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <nav class="space-y-1">
+              <a href="#" data-target="dashboard" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                <i class="fas fa-chart-pie w-5 text-gray-500"></i> Dashboard
+              </a>
+              <a href="#" data-target="attendance" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                <i class="fas fa-calendar-check w-5 text-gray-500"></i> Attendance
+              </a>
+              <a href="#" data-target="students" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                <i class="fas fa-user-graduate w-5 text-gray-500"></i> Students
+              </a>
+              <a href="#" data-target="teachers" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                <i class="fas fa-chalkboard-teacher w-5 text-gray-500"></i> Teachers
+              </a>
+              <a href="#" data-target="reports" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                <i class="fas fa-file-alt w-5 text-gray-500"></i> Reports
+              </a>
+            </nav>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 min-w-0">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6">
+          <div class="mb-4 sm:mb-6">
+            <h2 id="pageTitle" class="text-lg sm:text-xl font-semibold text-gray-800">Dashboard</h2>
+            <p class="text-sm text-gray-500">Welcome to TrackED</p>
+          </div>
+
+          <div id="content" class="space-y-6"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    const chartInstances = {};
+    let currentRole = "student";
+    let currentSection = "dashboard";
+
+    // --- Helpers ---
+    function qs(sel, root = document) { return root.querySelector(sel); }
+    function qsa(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
+
+    function debounce(fn, wait = 150) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+    }
+
+    // Hide low-priority table columns on mobile by header text
+    function applyResponsiveTables() {
+      const hideOnMobile = new Set(["Marked By", "Actions", "# Students", "Timestamp", "Role", "Status"]);
+      const small = window.innerWidth < 640;
+
+      qsa(".scrollable-table-container table").forEach(table => {
+        const headerCells = Array.from(table.querySelectorAll("thead th"));
+        const hideIdxs = headerCells
+          .map((th, i) => hideOnMobile.has(th.textContent.trim()) ? i : -1)
+          .filter(i => i >= 0);
+
+        hideIdxs.forEach(idx => {
+          table.querySelectorAll("tr").forEach(tr => {
+            const cell = tr.children[idx];
+            if (cell) cell.classList.toggle("hidden", small);
+          });
+        });
+
+        table.classList.toggle("text-xs", small);
+      });
+    }
+
+    const resizeCharts = debounce(() => {
+      Object.values(chartInstances).forEach(c => c && c.resize());
+    }, 120);
+
+    // --- Charts ---
+    function initStudentChart() {
+      const ctx = qs("#studentAttendanceChart");
+      if (!ctx) return;
+      chartInstances.studentAttendanceChart?.destroy?.();
+      chartInstances.studentAttendanceChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+          datasets: [{
+            label: "Attendance %",
+            data: [92, 88, 96, 90, 94],
+            backgroundColor: "rgba(59,130,246,0.5)",
+            borderColor: "rgba(59,130,246,1)",
+            borderWidth: 1,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.05)" } },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    function initTeacherChart() {
+      const ctx = qs("#teacherAnalyticsChart");
+      if (!ctx) return;
+      chartInstances.teacherAnalyticsChart?.destroy?.();
+      chartInstances.teacherAnalyticsChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+          datasets: [{
+            label: "Class 10A",
+            data: [85, 88, 90, 92],
+            borderColor: "rgba(99,102,241,1)",
+            backgroundColor: "rgba(99,102,241,0.2)",
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3,
+          }, {
+            label: "Class 10B",
+            data: [80, 84, 86, 89],
+            borderColor: "rgba(16,185,129,1)",
+            backgroundColor: "rgba(16,185,129,0.2)",
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { position: "bottom" } },
+        },
+      });
+    }
+
+    function initTeacherComparisonChart() {
+      const ctx = qs("#teacherComparisonChart");
+      if (!ctx) return;
+      chartInstances.teacherComparisonChart?.destroy?.();
+      chartInstances.teacherComparisonChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Math", "Physics", "Chemistry", "Biology", "English"],
+          datasets: [{
+            label: "Avg %",
+            data: [91, 88, 86, 89, 93],
+            backgroundColor: "rgba(59,130,246,0.6)",
+            borderColor: "rgba(59,130,246,1)",
+            borderWidth: 1,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    function initAdminOverallChart() {
+      const ctx = qs("#adminOverallChart");
+      if (!ctx) return;
+      chartInstances.adminOverallChart?.destroy?.();
+      chartInstances.adminOverallChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Present", "Late", "Absent"],
+          datasets: [{
+            data: [78, 8, 14],
+            backgroundColor: ["#10b981", "#f59e0b", "#ef4444"],
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } },
+          cutout: "60%",
+        },
+      });
+    }
+
+    function initAdminTrendChart() {
+      const ctx = qs("#adminTrendChart");
+      if (!ctx) return;
+      chartInstances.adminTrendChart?.destroy?.();
+      chartInstances.adminTrendChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+          datasets: [{
+            label: "Attendance %",
+            data: [87, 88, 86, 89, 90, 92],
+            borderColor: "rgba(59,130,246,1)",
+            backgroundColor: "rgba(59,130,246,0.2)",
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    // --- Content builders ---
+    function studentContent() {
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-gray-500">This Week</p>
+              <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+2%</span>
+            </div>
+            <p class="mt-1 text-2xl font-semibold text-gray-800">92%</p>
+          </div>
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
+            <p class="text-sm text-gray-500">Classes Attended</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-800">18/20</p>
+          </div>
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
+            <p class="text-sm text-gray-500">Streak</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-800">6 days</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Subject-wise Attendance</h3>
+              <button class="text-sm text-primary hover:underline">View details</button>
+            </div>
+            <canvas id="studentAttendanceChart"></canvas>
+          </div>
+
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-3">Upcoming Classes</h3>
+            <ul class="space-y-3">
+              <li class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-800">Math - Algebra</p>
+                  <p class="text-xs text-gray-500">09:00 AM - Room 204</p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded bg-indigo-50 text-indigo-700">Today</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-800">Physics - Motion</p>
+                  <p class="text-xs text-gray-500">11:00 AM - Lab 3</p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Tomorrow</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Recent Attendance</h3>
+            <div class="flex items-center gap-2">
+              <button class="px-2 py-1 text-sm border rounded">Export</button>
+            </div>
+          </div>
+
+          <div class="scrollable-table-container overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marked By</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr>
+                  <td>2025-09-18</td>
+                  <td>Mathematics</td>
+                  <td><span class="px-2 py-1 rounded text-xs bg-green-50 text-green-700">Present</span></td>
+                  <td>Mr. Smith</td>
+                  <td><button class="text-primary text-sm">View</button></td>
+                </tr>
+                <tr>
+                  <td>2025-09-17</td>
+                  <td>Physics</td>
+                  <td><span class="px-2 py-1 rounded text-xs bg-red-50 text-red-700">Absent</span></td>
+                  <td>Ms. Davis</td>
+                  <td><button class="text-primary text-sm">View</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function teacherContent() {
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Class Analytics</h3>
+              <button class="text-sm text-primary hover:underline">Filters</button>
+            </div>
+            <canvas id="teacherAnalyticsChart"></canvas>
+          </div>
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Subject Comparison</h3>
+            </div>
+            <canvas id="teacherComparisonChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Recent Attendance</h3>
+            <button class="px-2 py-1 text-sm border rounded">Add Record</button>
+          </div>
+
+          <div class="scrollable-table-container overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marked By</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr>
+                  <td>2025-09-19</td>
+                  <td>10A</td>
+                  <td>28</td>
+                  <td>2</td>
+                  <td>A. Gupta</td>
+                  <td><button class="text-primary text-sm">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>2025-09-18</td>
+                  <td>10B</td>
+                  <td>27</td>
+                  <td>3</td>
+                  <td>A. Gupta</td>
+                  <td><button class="text-primary text-sm">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminContent() {
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-1">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Overall Status</h3>
+            </div>
+            <canvas id="adminOverallChart"></canvas>
+          </div>
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Monthly Trend</h3>
+            </div>
+            <canvas id="adminTrendChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Users</h3>
+            <div class="flex items-center gap-2">
+              <button class="px-2 py-1 text-sm border rounded">Invite</button>
+            </div>
+          </div>
+
+          <div class="scrollable-table-container overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr>
+                  <td>Alex Johnson</td>
+                  <td>alex.johnson@example.com</td>
+                  <td>Admin</td>
+                  <td><span class="px-2 py-1 rounded text-xs bg-green-50 text-green-700">Active</span></td>
+                  <td><button class="text-primary text-sm">Manage</button></td>
+                </tr>
+                <tr>
+                  <td>Meera Shah</td>
+                  <td>meera.shah@example.com</td>
+                  <td>Teacher</td>
+                  <td><span class="px-2 py-1 rounded text-xs bg-yellow-50 text-yellow-700">Pending</span></td>
+                  <td><button class="text-primary text-sm">Manage</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function dashboardTitleFor(role) {
+      if (role === "student") return "Student Dashboard";
+      if (role === "teacher") return "Teacher Dashboard";
+      return "Admin Dashboard";
+    }
+
+    function render() {
+      qs("#pageTitle").textContent = dashboardTitleFor(currentRole);
+
+      if (currentRole === "student") {
+        qs("#content").innerHTML = studentContent();
+        initStudentChart();
+      } else if (currentRole === "teacher") {
+        qs("#content").innerHTML = teacherContent();
+        initTeacherChart();
+        initTeacherComparisonChart();
+      } else {
+        qs("#content").innerHTML = adminContent();
+        initAdminOverallChart();
+        initAdminTrendChart();
+      }
+
+      applyResponsiveTables();
+      resizeCharts();
+    }
+
+    // --- Auth + role switching (demo only) ---
+    qs("#loginTab").addEventListener("click", (e) => {
+      e.preventDefault();
+      qs("#loginForm").classList.remove("hidden");
+      qs("#registerForm").classList.add("hidden");
+      qs("#loginTab").classList.add("bg-primary", "text-white");
+      qs("#registerTab").classList.remove("bg-primary", "text-white");
+    });
+    qs("#registerTab").addEventListener("click", (e) => {
+      e.preventDefault();
+      qs("#loginForm").classList.add("hidden");
+      qs("#registerForm").classList.remove("hidden");
+      qs("#registerTab").classList.add("bg-primary", "text-white");
+      qs("#loginTab").classList.remove("bg-primary", "text-white");
+    });
+
+    qs("#loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      currentRole = qs("#loginRole").value;
+      qs("#authModal").classList.add("hidden");
+      qs("#roleSwitcher").value = currentRole;
+      render();
+    });
+
+    qs("#roleSwitcher").addEventListener("change", (e) => {
+      currentRole = e.target.value;
+      render();
+    });
+
+    // --- Sidebar controls ---
+    const sidebar = qs("#sidebar");
+    const sidebarOverlay = qs("#sidebarOverlay");
+    const openSidebarBtn = qs("#openSidebarBtn");
+    const closeSidebarBtn = qs("#closeSidebarBtn");
+
+    function openSidebar() {
+      sidebar.classList.remove("-translate-x-full");
+      sidebarOverlay.classList.remove("hidden");
+    }
+    function closeSidebar() {
+      sidebar.classList.add("-translate-x-full");
+      sidebarOverlay.classList.add("hidden");
+    }
+
+    openSidebarBtn.addEventListener("click", openSidebar);
+    closeSidebarBtn.addEventListener("click", closeSidebar);
+    sidebarOverlay.addEventListener("click", closeSidebar);
+
+    // --- Profile dropdown ---
+    const profileBtn = qs("#profileBtn");
+    const profileDropdown = qs("#profileDropdown");
+    profileBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle("hidden");
+    });
+    document.addEventListener("click", () => profileDropdown.classList.add("hidden"));
+
+    // --- Sign out (demo) ---
+    qs("#signOutBtn").addEventListener("click", () => {
+      location.reload();
+    });
+
+    // --- Nav link demo handlers ---
+    qsa(".nav-link").forEach(a => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        currentSection = a.dataset.target;
+        render();
+      });
+    });
+
+    // --- Initial load ---
+    window.addEventListener("resize", debounce(applyResponsiveTables, 150));
+    window.addEventListener("resize", resizeCharts);
+    document.addEventListener("DOMContentLoaded", () => {
+      // Default to login modal visible; close it for demo
+      // qs("#authModal").classList.add("hidden"); // Uncomment to skip auth
+    });
+  </script>
 </body>
 </html>
