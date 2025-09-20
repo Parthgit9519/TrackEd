@@ -1,965 +1,950 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <meta name="theme-color" content="#1e40af" />
-  <title>TrackED - Attendance Management System</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>TrackED — Attendance Demo</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-  <style>
-    /* Motion accessibility */
-    @media (prefers-reduced-motion: reduce) {
-      * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-      html:focus-within { scroll-behavior: auto !important; }
-    }
+    <!-- Font Awesome (icons) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
-    /* Sticky headers for tables */
-    .scrollable-table { overflow-x: auto; }
-    .scrollable-table thead th { position: sticky; top: 0; background: #f9fafb; z-index: 1; }
+    <!-- Tailwind theme extension -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1e40af",
+              accent: "#6366f1",
+              success: "#10b981",
+              danger: "#ef4444",
+            },
+          },
+        },
+      };
+    </script>
 
-    /* Chart containers */
-    .chart-box { height: 20rem; }
-    @media (max-width: 640px) { .chart-box { height: 16rem; } }
-
-    /* Video aspect ratio and fit */
-    .video-wrap { aspect-ratio: 16 / 9; background: #000; border-radius: 0.75rem; overflow: hidden; }
-    video { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Sidebar slide on mobile */
-    .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
-    .sidebar.open { transform: translateX(0); }
-
-    /* Active nav link */
-    .nav-link.active { background: #eef2ff; color: #1e40af; }
-
-    /* Simple card */
-    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-
-    /* Compact table on small screens */
-    @media (max-width: 640px) {
-      .scrollable-table table th, .scrollable-table table td { padding: 0.5rem 0.75rem !important; white-space: nowrap; font-size: 0.875rem; }
-    }
-  </style>
-</head>
-
-<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen text-gray-800">
-  <!-- Env banner -->
-  <div id="envBanner" class="hidden px-4 py-2 text-sm bg-yellow-50 text-yellow-800 border-b border-yellow-200 text-center"></div>
-
-  <!-- Auth Modal -->
-  <div id="authModal" class="fixed inset-0 hidden items-center justify-center z-50 p-4">
-    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-purple-900/70 to-indigo-900/70"></div>
-    <div class="relative card w-full max-w-md p-6 sm:p-8">
-      <div class="text-center mb-6">
-        <div class="mx-auto w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 grid place-items-center text-white text-2xl shadow">
-          📚
-        </div>
-        <h1 class="mt-3 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">TrackED</h1>
-        <p class="text-gray-500 text-sm">Attendance Management System</p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 bg-gray-100 rounded-xl p-1">
-        <button id="loginTab" class="py-2 rounded-lg bg-indigo-900 text-white text-sm font-medium">Sign In</button>
-        <button id="registerTab" class="py-2 rounded-lg text-gray-700 text-sm font-medium">Sign Up</button>
-      </div>
-
-      <!-- Sign In -->
-      <form id="loginForm" class="mt-4 space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
-          <input id="loginEmail" type="email" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" value="student@tracked.com" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Password</label>
-          <input id="loginPassword" type="password" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" value="password123" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Role</label>
-          <select id="loginRole" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg py-2.5 font-medium">Sign In</button>
-      </form>
-
-      <!-- Sign Up -->
-      <form id="registerForm" class="mt-4 space-y-4 hidden">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm font-medium mb-1">First Name</label>
-            <input id="regFirstName" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Last Name</label>
-            <input id="regLastName" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
-          <input id="regEmail" type="email" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Password</label>
-          <input id="regPassword" type="password" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Role</label>
-          <select id="regRole" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
+    <style>
+      /* Tiny extras */
+      .animate-fade {
+        animation: fadeIn 0.35s ease-out both;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #cameraVideo {
+        background: #000;
+        border-radius: 0.5rem;
+      }
+      #toast.show {
+        display: block;
+        opacity: 0;
+        animation: toastIn 0.28s forwards;
+      }
+      @keyframes toastIn {
+        to {
+          opacity: 1;
+          transform: translateY(-4px);
+        }
+      }
+      /* keep table headers sticky for wide lists */
+      .sticky-head thead th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 2;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <!-- Auth modal (demo) -->
+    <div
+      id="authModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    >
+      <div class="bg-white rounded-2xl w-full max-w-md p-6 relative">
+        <h2 class="text-2xl font-semibold text-primary mb-3">
+          TrackED — Sign in / Sign up (Demo)
+        </h2>
+        <div class="flex gap-2 mb-4 bg-gray-100 rounded p-1">
+          <button
+            id="loginTab"
+            class="flex-1 rounded bg-primary text-white py-2"
+          >
+            Sign In
+          </button>
+          <button id="registerTab" class="flex-1 rounded text-gray-600 py-2">
+            Sign Up
+          </button>
         </div>
 
-        <!-- Student extra -->
-        <div id="studentExtra" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium mb-1">Class</label>
-            <select id="regClass" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-              <option>10A</option><option>10B</option><option>11A</option><option>11B</option><option>12A</option><option>12B</option>
+        <form id="loginForm" class="space-y-3">
+          <input
+            id="loginEmail"
+            class="w-full border px-3 py-2 rounded"
+            placeholder="email"
+            value="student@demo"
+          />
+          <div class="flex gap-2">
+            <input
+              id="loginPassword"
+              type="password"
+              class="flex-1 border px-3 py-2 rounded"
+              placeholder="password"
+              value="password"
+            />
+            <select id="loginRole" class="border px-2 py-2 rounded">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
-        </div>
+          <button
+            type="submit"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded"
+          >
+            Sign in
+          </button>
+        </form>
 
-        <!-- Teacher extra -->
-        <div id="teacherExtra" class="space-y-3 hidden">
-          <div>
-            <label class="block text-sm font-medium mb-1">Department</label>
-            <select id="regDepartment" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-              <option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>English</option><option>Computer Science</option>
+        <form id="registerForm" class="hidden space-y-3">
+          <input
+            id="regName"
+            class="w-full border px-3 py-2 rounded"
+            placeholder="Full name"
+          />
+          <input
+            id="regEmail"
+            class="w-full border px-3 py-2 rounded"
+            placeholder="email"
+          />
+          <div class="flex gap-2">
+            <select id="regRole" class="border px-2 py-2 rounded">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
+            <input
+              id="regPass"
+              type="password"
+              class="flex-1 border px-3 py-2 rounded"
+              placeholder="password"
+            />
           </div>
-        </div>
+          <button
+            id="registerBtn"
+            class="w-full bg-primary text-white py-2 rounded"
+          >
+            Create account
+          </button>
+        </form>
 
-        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg py-2.5 font-medium">Create Account</button>
-      </form>
+        <button id="closeAuth" class="absolute top-3 right-3 text-gray-400">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
     </div>
-  </div>
 
-  <!-- App Shell -->
-  <div class="min-h-screen">
-    <!-- Top Navbar -->
-    <nav class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="h-14 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <button id="openSidebar" class="md:hidden w-9 h-9 grid place-items-center border rounded-lg text-gray-700" aria-label="Open menu">☰</button>
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white">✔</div>
-              <span class="font-semibold">TrackED</span>
-            </div>
+    <!-- App shell -->
+    <div class="flex min-h-screen">
+      <!-- sidebar -->
+      <aside id="sidebar" class="w-72 bg-white border-r p-4 hidden md:block">
+        <div class="flex items-center gap-2 mb-6">
+          <div
+            class="w-10 h-10 rounded bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white"
+          >
+            <i class="fa fa-check"></i>
           </div>
-
-          <div class="flex items-center gap-3">
-            <div class="hidden sm:flex items-center gap-2">
-              <span class="text-sm text-gray-600">Role</span>
-              <select id="roleSwitcher" class="px-2 py-1.5 border rounded-md text-sm">
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <div class="relative">
-              <button id="profileBtn" class="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                <img src="https://i.pravatar.cc/40?img=13" alt="avatar" class="w-8 h-8 rounded-full" loading="lazy" decoding="async" />
-                <span class="text-gray-600 text-sm">Profile</span>
-              </button>
-              <div id="profileMenu" class="hidden absolute right-0 mt-2 w-56 card p-2">
-                <div class="px-3 py-2">
-                  <p id="profileName" class="text-sm font-medium">Guest</p>
-                  <p id="profileEmail" class="text-xs text-gray-500">guest@example.com</p>
-                </div>
-                <hr />
-                <button id="logoutBtn" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm text-red-600">Logout</button>
-              </div>
-            </div>
+          <div>
+            <div class="font-semibold">TrackED</div>
+            <div class="text-xs text-gray-500">Attendance Management</div>
           </div>
         </div>
-      </div>
-    </nav>
 
-    <!-- Layout -->
-    <div class="flex">
-      <!-- Sidebar overlay -->
-      <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 hidden md:hidden"></div>
-
-      <!-- Sidebar -->
-      <aside id="sidebar" class="sidebar fixed md:static top-0 left-0 h-full md:h-auto w-72 md:w-64 bg-white border-r border-gray-200 z-30">
-        <div class="h-14 md:hidden"></div>
-        <div class="p-4">
-          <div class="md:hidden flex items-center gap-2 mb-4">
-            <span class="font-semibold">Menu</span>
-            <button id="closeSidebar" class="ml-auto w-9 h-9 grid place-items-center border rounded-lg text-gray-700" aria-label="Close menu">✕</button>
-          </div>
-          <nav class="space-y-1">
-            <a href="#" data-section="dashboard" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🏠 Dashboard</a>
-            <a href="#" data-section="attendance" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🗓 Attendance</a>
-            <a href="#" data-section="students" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🎓 Students</a>
-            <a href="#" data-section="teachers" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">👩‍🏫 Teachers</a>
-            <a href="#" data-section="reports" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">📑 Reports</a>
-          </nav>
+        <div class="mb-4">
+          <label class="text-xs text-gray-500">Role (preview)</label>
+          <select
+            id="roleSwitcher"
+            class="w-full mt-2 border px-2 py-2 rounded"
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
+
+        <nav class="space-y-2 text-sm">
+          <a
+            class="nav-link block p-3 rounded hover:bg-gray-50"
+            data-target="dashboard"
+            >Dashboard</a
+          >
+          <a
+            class="nav-link block p-3 rounded hover:bg-gray-50"
+            data-target="attendance"
+            >Attendance</a
+          >
+          <a
+            class="nav-link block p-3 rounded hover:bg-gray-50"
+            data-target="students"
+            >Students</a
+          >
+          <a
+            class="nav-link block p-3 rounded hover:bg-gray-50"
+            data-target="teachers"
+            >Teachers</a
+          >
+          <a
+            class="nav-link block p-3 rounded hover:bg-gray-50"
+            data-target="reports"
+            >Reports</a
+          >
+        </nav>
       </aside>
 
-      <!-- Main -->
-      <main class="flex-1 min-w-0">
-        <div class="max-w-7xl mx-auto p-4 sm:p-6">
-          <div class="mb-4 sm:mb-6">
-            <h2 id="pageTitle" class="text-lg sm:text-xl font-semibold">Dashboard</h2>
-            <p class="text-sm text-gray-500">Welcome to TrackED</p>
+      <!-- mobile top bar -->
+      <div class="w-full">
+        <header
+          class="flex items-center justify-between p-3 border-b bg-white md:hidden"
+        >
+          <div class="flex items-center gap-2">
+            <button id="mobileMenuBtn" class="p-2 border rounded">
+              <i class="fa fa-bars"></i>
+            </button>
+            <div class="font-semibold">TrackED</div>
           </div>
+          <div class="flex items-center gap-3">
+            <div id="mobileRoleLabel" class="text-sm text-gray-600">
+              Student
+            </div>
+            <button id="openAuth" class="p-2 border rounded">
+              <i class="fa fa-user"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- content -->
+        <main class="p-4">
+          <div class="mb-4">
+            <h1 id="pageTitle" class="text-xl font-semibold">Dashboard</h1>
+            <p id="pageSubtitle" class="text-sm text-gray-500">
+              Welcome to TrackED
+            </p>
+          </div>
+
+          <!-- primary mount -->
           <div id="content" class="space-y-6"></div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
-  </div>
 
-  <script>
-    // --------- State & Storage ----------
-    const LS_KEYS = {
-      role: "tracked_role",
-      section: "tracked_section",
-      user: "tracked_user"
-    };
+    <!-- small utilities -->
+    <div
+      id="toast"
+      class="fixed bottom-6 right-6 hidden bg-black text-white px-4 py-2 rounded"
+    ></div>
 
-    const getLS = (k, def=null) => {
-      try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; }
-    };
-    const setLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-    const delLS = (k) => { try { localStorage.removeItem(k); } catch {} };
+    <script>
+      /* -------------------------
+         Application State & Mock Data
+         ------------------------- */
+      const state = {
+        currentRole: localStorage.getItem('tracked_role') || 'student',
+        currentSection: 'dashboard',
+        students: JSON.parse(localStorage.getItem('tracked_students')) || [
+          { id:'S001', name:'Aarav Patel', cls:'10A' },
+          { id:'S002', name:'Meera Shah', cls:'10A' },
+          { id:'S003', name:'Rohan Kumar', cls:'10B' }
+        ],
+        teachers: JSON.parse(localStorage.getItem('tracked_teachers')) || [
+          { id:'T001', name:'Mr. Gupta', subject:'Mathematics' },
+          { id:'T002', name:'Ms. Verma', subject:'Physics' }
+        ],
+        attendance: JSON.parse(localStorage.getItem('tracked_attendance')) || [
+          { id:'R001', studentId:'S001', studentName:'Aarav Patel', status:'Present', role:'student', location:null, timestamp:'2025-09-18T08:30:00Z' },
+          { id:'R002', studentId:'S002', studentName:'Meera Shah', status:'Absent', role:'student', location:null, timestamp:'2025-09-17T09:00:00Z' }
+        ],
+        charts: {}
+      };
 
-    const appState = {
-      currentRole: getLS(LS_KEYS.role, "student"),
-      currentSection: getLS(LS_KEYS.section, "dashboard"),
-      currentUser: getLS(LS_KEYS.user, null),
-      charts: {}
-    };
-
-    // Sample data
-    const sampleStudents = [
-      { id: "s1", name: "Rohan Sharma", class: "10A" },
-      { id: "s2", name: "Priya Singh", class: "10B" },
-      { id: "s3", name: "Aarav Mehta", class: "11A" },
-      { id: "s4", name: "Isha Patel", class: "12B" },
-    ];
-
-    const teacherRowStatus = {}; // id -> "Present"/"Absent"/undefined
-
-    // --------- Utilities ----------
-    const qs = (s, r=document) => r.querySelector(s);
-    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
-    const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
-    function secureBanner() {
-      const ok = window.isSecureContext || isLocalhost;
-      const el = qs("#envBanner");
-      if (!ok) {
-        el.textContent = "Tip: Use HTTPS or localhost for camera and location permissions.";
-        el.classList.remove("hidden");
+      function saveAll(){
+        localStorage.setItem('tracked_students', JSON.stringify(state.students));
+        localStorage.setItem('tracked_teachers', JSON.stringify(state.teachers));
+        localStorage.setItem('tracked_attendance', JSON.stringify(state.attendance));
+        localStorage.setItem('tracked_role', state.currentRole);
       }
-    }
 
-    // Cleanup charts before re-creating
-    function destroyCharts() {
-      Object.values(appState.charts).forEach(c => { try { c.destroy(); } catch {} });
-      appState.charts = {};
-    }
-
-    // --------- Auth Modal ----------
-    function renderAuthModal(show = true) {
-      const modal = qs("#authModal");
-      modal.classList.toggle("hidden", !show);
-
-      // Tabs
-      const loginTab = qs("#loginTab");
-      const registerTab = qs("#registerTab");
-      const loginForm = qs("#loginForm");
-      const registerForm = qs("#registerForm");
-      const studentExtra = qs("#studentExtra");
-      const teacherExtra = qs("#teacherExtra");
-
-      loginTab.onclick = () => {
-        loginForm.classList.remove("hidden");
-        registerForm.classList.add("hidden");
-        loginTab.classList.add("bg-indigo-900","text-white");
-        registerTab.classList.remove("bg-indigo-900","text-white");
-      };
-      registerTab.onclick = () => {
-        loginForm.classList.add("hidden");
-        registerForm.classList.remove("hidden");
-        registerTab.classList.add("bg-indigo-900","text-white");
-        loginTab.classList.remove("bg-indigo-900","text-white");
-      };
-
-      // Role-specific fields in Sign Up
-      qs("#regRole").onchange = (e) => {
-        const v = e.target.value;
-        studentExtra.classList.toggle("hidden", v !== "student");
-        teacherExtra.classList.toggle("hidden", v !== "teacher");
-      };
-
-      // Sign In
-      loginForm.onsubmit = (e) => {
-        e.preventDefault();
-        const role = qs("#loginRole").value;
-        const email = qs("#loginEmail").value.trim();
-        const name = email ? email.split("@")[0] : "User";
-        appState.currentRole = role;
-        appState.currentSection = "dashboard";
-        appState.currentUser = { name, email, role };
-        setLS(LS_KEYS.role, role);
-        setLS(LS_KEYS.section, "dashboard");
-        setLS(LS_KEYS.user, appState.currentUser);
-        modal.classList.add("hidden");
-        qs("#roleSwitcher").value = role;
-        updateProfile();
-        renderDashboard(appState.currentRole, appState.currentSection);
-      };
-
-      // Sign Up
-      registerForm.onsubmit = (e) => {
-        e.preventDefault();
-        const role = qs("#regRole").value;
-        const name = `${qs("#regFirstName").value.trim()} ${qs("#regLastName").value.trim()}`.trim();
-        const email = qs("#regEmail").value.trim();
-        // Extra capture (not persisted for demo beyond profile)
-        const cls = qs("#regClass").value;
-        const dept = qs("#regDepartment").value;
-        appState.currentRole = role;
-        appState.currentSection = "dashboard";
-        appState.currentUser = { name, email, role, class: cls, department: dept };
-        setLS(LS_KEYS.role, role);
-        setLS(LS_KEYS.section, "dashboard");
-        setLS(LS_KEYS.user, appState.currentUser);
-        modal.classList.add("hidden");
-        qs("#roleSwitcher").value = role;
-        updateProfile();
-        renderDashboard(appState.currentRole, appState.currentSection);
-      };
-    }
-
-    function updateProfile() {
-      const u = appState.currentUser || { name: "Guest", email: "guest@example.com" };
-      qs("#profileName").textContent = u.name || "Guest";
-      qs("#profileEmail").textContent = u.email || "guest@example.com";
-    }
-
-    // --------- Layout Wiring ----------
-    function wireLayout() {
-      // Sidebar open/close
-      const sidebar = qs("#sidebar");
-      const overlay = qs("#sidebarOverlay");
-      qs("#openSidebar").onclick = () => { sidebar.classList.add("open"); overlay.classList.remove("hidden"); };
-      qs("#closeSidebar").onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
-      overlay.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
-
-      // Profile dropdown
-      const profileBtn = qs("#profileBtn");
-      const profileMenu = qs("#profileMenu");
-      profileBtn.onclick = (e) => {
-        e.stopPropagation();
-        profileMenu.classList.toggle("hidden");
-      };
-      document.addEventListener("click", () => profileMenu.classList.add("hidden"));
-
-      // Logout
-      qs("#logoutBtn").onclick = () => {
-        delLS(LS_KEYS.role); delLS(LS_KEYS.section); delLS(LS_KEYS.user);
-        appState.currentRole = "student";
-        appState.currentSection = "dashboard";
-        appState.currentUser = null;
-        destroyCharts();
-        renderAuthModal(true);
-      };
-
-      // Role switcher
-      const roleSel = qs("#roleSwitcher");
-      roleSel.value = appState.currentRole;
-      roleSel.onchange = (e) => {
-        appState.currentRole = e.target.value;
-        appState.currentSection = "dashboard";
-        setLS(LS_KEYS.role, appState.currentRole);
-        setLS(LS_KEYS.section, appState.currentSection);
-        destroyCharts();
-        renderDashboard(appState.currentRole, appState.currentSection);
-      };
-
-      // Sidebar nav
-      qsa(".nav-link").forEach(a => {
-        a.onclick = (e) => {
-          e.preventDefault();
-          const section = a.dataset.section;
-          appState.currentSection = section;
-          setLS(LS_KEYS.section, section);
-          qsa(".nav-link").forEach(n => n.classList.remove("active"));
-          a.classList.add("active");
-          destroyCharts();
-          renderDashboard(appState.currentRole, appState.currentSection);
-          sidebar.classList.remove("open");
-          overlay.classList.add("hidden");
-        };
-      });
-    }
-
-    // --------- Dashboard Renderers ----------
-    function renderDashboard(role, section) {
-      qs("#pageTitle").textContent = `${role.charAt(0).toUpperCase()+role.slice(1)} Dashboard`;
-      qsa(".nav-link").forEach(n => n.classList.toggle("active", n.dataset.section === section));
-      const c = qs("#content");
-      c.innerHTML = "";
-
-      if (role === "student") {
-        if (section === "dashboard") c.innerHTML = studentDashboardHTML();
-        if (section === "attendance") c.innerHTML = studentAttendanceHTML();
-        if (section === "students") c.innerHTML = studentStudentsHTML();
-        if (section === "teachers") c.innerHTML = studentTeachersHTML();
-        if (section === "reports") c.innerHTML = studentReportsHTML();
-        initStudentDashboard(section);
-      } else if (role === "teacher") {
-        if (section === "dashboard") c.innerHTML = teacherDashboardHTML();
-        if (section === "attendance") c.innerHTML = teacherAttendanceHTML();
-        if (section === "students") c.innerHTML = teacherStudentsHTML();
-        if (section === "teachers") c.innerHTML = teacherTeachersHTML();
-        if (section === "reports") c.innerHTML = teacherReportsHTML();
-        initTeacherDashboard(section);
-      } else {
-        if (section === "dashboard") c.innerHTML = adminDashboardHTML();
-        if (section === "attendance") c.innerHTML = adminAttendanceHTML();
-        if (section === "students") c.innerHTML = adminStudentsHTML();
-        if (section === "teachers") c.innerHTML = adminTeachersHTML();
-        if (section === "reports") c.innerHTML = adminReportsHTML();
-        initAdminDashboard(section);
+      /* -------------------------
+         Small helpers
+         ------------------------- */
+      const qs = (s, root=document) => root.querySelector(s);
+      const qsa = (s, root=document) => Array.from(root.querySelectorAll(s));
+      const uid = (p='id') => p + Math.random().toString(36).slice(2,9);
+      function toast(msg, t=2200){
+        const el = qs('#toast');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        el.classList.add('show');
+        setTimeout(()=>{ el.classList.add('hidden'); el.classList.remove('show'); }, t);
       }
-    }
 
-    // --------- Student Views ----------
-    function studentDashboardHTML() {
-      return `
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-          <div class="xl:col-span-3 card p-4 sm:p-5">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <span class="text-lg font-semibold">Check-in</span>
+      /* -------------------------
+         Charts utilities (Chart.js)
+         ------------------------- */
+      function createDoughnut(ctx, labels, data){
+        if (!ctx) return null;
+        if (ctx._chart) ctx._chart.destroy();
+        ctx._chart = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data, backgroundColor:['#10b981','#ef4444','#f59e0b'] }]},
+          options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, cutout:'60%' }
+        });
+        return ctx._chart;
+      }
+      function createBar(ctx, labels, data){
+        if (!ctx) return null;
+        if (ctx._chart) ctx._chart.destroy();
+        ctx._chart = new Chart(ctx, {
+          type:'bar',
+          data:{ labels, datasets:[{ label:'Attendance %', data, borderRadius:6 }]},
+          options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}}}
+        });
+        return ctx._chart;
+      }
+      function createLine(ctx, labels, data){
+        if (!ctx) return null;
+        if (ctx._chart) ctx._chart.destroy();
+        ctx._chart = new Chart(ctx, {
+          type:'line',
+          data:{ labels, datasets:[{ label:'Trend', data, tension:0.35, fill:true, pointRadius:2 }]},
+          options:{ responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}}}
+        });
+        return ctx._chart;
+      }
+
+      /* -------------------------
+         Renderer: per-role dashboards
+         ------------------------- */
+      function render(){
+        // page title
+        qs('#pageTitle').textContent = `${capitalize(state.currentRole)} — ${capitalize(state.currentSection)}`;
+        qs('#pageSubtitle').textContent = `Role: ${capitalize(state.currentRole)} • Section: ${capitalize(state.currentSection)}`;
+
+        // inject content
+        const mount = qs('#content');
+        if (!mount) return;
+        let html = '';
+
+        // STUDENT Dashboard (distinct)
+        if (state.currentRole === 'student' && state.currentSection === 'dashboard') {
+          html = studentDashboard();
+        }
+        // TEACHER Dashboard (distinct)
+        else if (state.currentRole === 'teacher' && state.currentSection === 'dashboard') {
+          html = teacherDashboard();
+        }
+        // ADMIN Dashboard (distinct)
+        else if (state.currentRole === 'admin' && state.currentSection === 'dashboard') {
+          html = adminDashboard();
+        }
+        // Generic: attendance/students/teachers/reports routes render simpler pages (reusable)
+        else {
+          if (state.currentSection === 'attendance') html = attendancePage();
+          else if (state.currentSection === 'students') html = studentsPage();
+          else if (state.currentSection === 'teachers') html = teachersPage();
+          else if (state.currentSection === 'reports') html = reportsPage();
+          else html = dashboardFallback();
+        }
+
+        mount.innerHTML = html;
+        mount.classList.add('animate-fade');
+
+        // after DOM insertion, wire events & charts
+        wireUpAfterRender();
+      }
+
+      /* -------------------------
+         UI fragments
+         ------------------------- */
+
+      function studentDashboard(){
+        // Student dashboard with top camera and live location
+        return `
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- left cards -->
+            <div class="space-y-4">
+              <div class="bg-white p-4 rounded shadow">
+                <div class="text-sm text-gray-500">Attendance This Week</div>
+                <div class="text-2xl font-semibold mt-2">${randomBetween(80,97)}%</div>
+                <div class="text-xs text-gray-400 mt-1">Keep it up! 🎯</div>
               </div>
-              <div class="flex flex-wrap gap-2">
-                <button id="startCamBtn" class="px-3 py-2 border rounded-lg bg-white">Start Camera</button>
-                <button id="stopCamBtn" class="px-3 py-2 border rounded-lg bg-white hidden">Stop</button>
-                <button id="locBtn" class="px-3 py-2 rounded-lg bg-indigo-600 text-white">Get Location</button>
+              <div class="bg-white p-4 rounded shadow">
+                <div class="text-sm text-gray-500">Upcoming Classes</div>
+                <ul class="mt-2 text-sm space-y-2">
+                  <li>09:00 — Math (Room 204)</li>
+                  <li>11:00 — Physics (Lab 3)</li>
+                </ul>
               </div>
             </div>
-            <div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <div class="video-wrap">
-                  <video id="studentVideo" autoplay playsinline muted></video>
+
+            <!-- center: camera + location -->
+            <div class="bg-white p-4 rounded shadow flex flex-col items-center">
+              <div class="w-full max-w-xl">
+                <h3 class="font-semibold mb-2">Live Camera — Mark Attendance</h3>
+                <video id="studentVideo" autoplay playsinline class="w-full rounded aspect-video bg-black"></video>
+                <div class="flex gap-2 mt-3">
+                  <select id="studentCameraList" class="border px-2 py-1 rounded flex-1"></select>
+                  <button id="studentStartCam" class="px-3 py-1 bg-primary text-white rounded">Start</button>
+                  <button id="studentMarkBtn" class="px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded">Mark</button>
                 </div>
-                <p id="camStatus" class="text-xs text-gray-500 mt-2">Camera: idle</p>
+
+                <div class="flex gap-2 mt-3">
+                  <button id="liveLocationBtn" class="px-3 py-1 border rounded flex-1">Get Live Location</button>
+                  <div id="liveLocationDisplay" class="px-3 py-1 rounded border text-xs text-gray-600">—</div>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-2">Camera + Location require browser permissions and secure context (https / localhost).</p>
               </div>
-              <div class="card p-4">
-                <p class="text-sm text-gray-600">Location</p>
-                <p id="locText" class="mt-1 text-sm">Not requested</p>
-                <a id="mapLink" href="#" target="_blank" class="text-indigo-600 text-sm hidden">Open in Google Maps</a>
+            </div>
+
+            <!-- right: small attendance breakdown -->
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold mb-2">Your Recent</h3>
+              <div class="h-40">
+                <canvas id="studentDoughnut"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="xl:col-span-1 card p-4">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Attendance Overview</h3>
-            </div>
-            <div class="chart-box">
-              <canvas id="studentPie"></canvas>
-            </div>
-          </div>
-
-          <div class="xl:col-span-2 card p-4">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Attendance History</h3>
-            </div>
-            <div class="scrollable-table">
-              <table class="min-w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Subject</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
+          <!-- history -->
+          <div class="bg-white p-4 rounded shadow mt-4">
+            <h3 class="font-semibold mb-2">Attendance History</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm sticky-head">
+                <thead>
+                  <tr class="text-xs text-gray-500">
+                    <th class="text-left p-2">Date</th>
+                    <th class="text-left p-2">Subject</th>
+                    <th class="text-left p-2">Status</th>
+                    <th class="text-left p-2">Location</th>
+                    <th class="text-left p-2">Marked</th>
                   </tr>
                 </thead>
-                <tbody id="studentHistory" class="divide-y divide-gray-200">
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function studentAttendanceHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">Mark Attendance</h3>
-          <p class="text-sm text-gray-600">Use camera and location from dashboard to verify presence; this section summarizes today’s status.</p>
-          <div class="mt-3 chart-box"><canvas id="studentPie2"></canvas></div>
-        </div>
-      `;
-    }
-
-    function studentStudentsHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">Classmates</h3>
-          <div class="scrollable-table">
-            <table class="min-w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                ${sampleStudents.map(s => `
-                  <tr>
-                    <td class="px-3 py-2">${s.name}</td>
-                    <td class="px-3 py-2">${s.class}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function studentTeachersHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">My Teachers</h3>
-          <ul class="space-y-2 text-sm">
-            <li>Mrs. Gupta — Mathematics</li>
-            <li>Mr. Nair — Physics</li>
-            <li>Dr. Das — Chemistry</li>
-          </ul>
-        </div>
-      `;
-    }
-
-    function studentReportsHTML() {
-      return `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="card p-4">
-            <p class="text-sm text-gray-600">Total Sessions</p>
-            <p class="text-2xl font-semibold mt-1">40</p>
-          </div>
-          <div class="card p-4">
-            <p class="text-sm text-gray-600">Present</p>
-            <p class="text-2xl font-semibold mt-1">34</p>
-          </div>
-          <div class="card p-4">
-            <p class="text-sm text-gray-600">Absent</p>
-            <p class="text-2xl font-semibold mt-1">6</p>
-          </div>
-        </div>
-      `;
-    }
-
-    // --------- Teacher Views ----------
-    function teacherDashboardHTML() {
-      return `
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-          <div class="xl:col-span-2 card p-4">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Attendance by Class</h3>
-            </div>
-            <div class="chart-box"><canvas id="teacherBar"></canvas></div>
-          </div>
-          <div class="card p-4">
-            <h3 class="font-semibold mb-2">Quick Tips</h3>
-            <p class="text-sm text-gray-600">Use the Students section to mark present/absent for quick roll call.</p>
-          </div>
-
-          <div class="xl:col-span-3 card p-4">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold">Students</h3>
-            </div>
-            <div class="scrollable-table">
-              <table class="min-w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="teacherList" class="divide-y divide-gray-200">
-                  ${sampleStudents.map(s => `
-                    <tr data-id="${s.id}">
-                      <td class="px-3 py-2">${s.name}</td>
-                      <td class="px-3 py-2">${s.class}</td>
-                      <td class="px-3 py-2"><span class="inline-block text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Not marked</span></td>
-                      <td class="px-3 py-2 space-x-2">
-                        <button class="present px-2 py-1 text-xs rounded bg-green-50 text-green-700">Present</button>
-                        <button class="absent px-2 py-1 text-xs rounded bg-red-50 text-red-700">Absent</button>
-                      </td>
+                <tbody>
+                  ${state.attendance.map(a => `
+                    <tr>
+                      <td class="p-2">${new Date(a.timestamp).toLocaleDateString()}</td>
+                      <td class="p-2">${a.studentName || '—'}</td>
+                      <td class="p-2">${statusBadge(a.status)}</td>
+                      <td class="p-2">${a.location ? `${a.location.latitude.toFixed(3)}, ${a.location.longitude.toFixed(3)}` : '—'}</td>
+                      <td class="p-2">${new Date(a.timestamp).toLocaleString()}</td>
                     </tr>
-                  `).join("")}
+                  `).join('')}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
-      `;
-    }
+        `;
+      }
 
-    function teacherAttendanceHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-2">Today’s Classes</h3>
-          <ul class="list-disc pl-5 text-sm space-y-1">
-            <li>10A — Mathematics — 9:00 AM</li>
-            <li>10B — Physics — 11:00 AM</li>
-            <li>11A — Chemistry — 1:00 PM</li>
-          </ul>
-        </div>
-      `;
-    }
+      function teacherDashboard(){
+        // Teacher dashboard: per-class bar chart + quick marking UI
+        return `
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded shadow col-span-1">
+              <h3 class="font-semibold">Class Controls</h3>
+              <div class="mt-3 space-y-2">
+                <label class="text-xs text-gray-500">Select Class</label>
+                <select id="teacherClassSelect" class="w-full border px-2 py-2 rounded">
+                  ${uniqueClasses().map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
 
-    function teacherStudentsHTML() {
-      return teacherDashboardHTML();
-    }
-
-    function teacherTeachersHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-2">Departments</h3>
-          <ul class="text-sm space-y-1">
-            <li>Mathematics</li><li>Physics</li><li>Chemistry</li><li>Biology</li><li>English</li><li>Computer Science</li>
-          </ul>
-        </div>
-      `;
-    }
-
-    function teacherReportsHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">Summary</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="card p-4"><p class="text-sm text-gray-600">Total Students</p><p class="text-2xl font-semibold mt-1">120</p></div>
-            <div class="card p-4"><p class="text-sm text-gray-600">Avg Attendance</p><p class="text-2xl font-semibold mt-1">88%</p></div>
-            <div class="card p-4"><p class="text-sm text-gray-600">Classes Today</p><p class="text-2xl font-semibold mt-1">3</p></div>
-          </div>
-        </div>
-      `;
-    }
-
-    // --------- Admin Views ----------
-    function adminDashboardHTML() {
-      return `
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-          <div class="xl:col-span-2 card p-4">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Overall Trend</h3>
+                <div class="mt-2 text-sm">
+                  <div class="text-xs text-gray-500">Add roster student</div>
+                  <div class="flex gap-2 mt-2">
+                    <input id="teacherAddName" class="flex-1 border px-2 py-1 rounded" placeholder="Full name" />
+                    <button id="teacherAddStudentBtn" class="px-3 py-1 bg-primary text-white rounded">Add</button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="chart-box"><canvas id="adminLine"></canvas></div>
+
+            <div class="bg-white p-4 rounded shadow col-span-2">
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">Class Attendance</h3>
+                <div class="text-xs text-gray-500">Realtime mock</div>
+              </div>
+              <div class="mt-3 chart-auto">
+                <canvas id="teacherBar"></canvas>
+              </div>
+            </div>
           </div>
-          <div class="card p-4">
-            <h3 class="font-semibold mb-2">Class Comparison</h3>
-            <div class="chart-box"><canvas id="adminBar"></canvas></div>
+
+          <div class="bg-white p-4 rounded shadow mt-4">
+            <h3 class="font-semibold mb-3">Students Roster</h3>
+            <div id="teacherRoster" class="space-y-2 max-h-64 overflow-auto">
+              ${state.students.map(s => `
+                <div class="flex items-center justify-between p-2 border rounded">
+                  <div>
+                    <div class="font-medium">${s.name}</div>
+                    <div class="text-xs text-gray-400">${s.id} • ${s.cls}</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button data-id="${s.id}" class="teacherPresentBtn px-3 py-1 bg-green-50 text-green-700 rounded">Present</button>
+                    <button data-id="${s.id}" class="teacherAbsentBtn px-3 py-1 bg-red-50 text-red-700 rounded">Absent</button>
+                    <button data-name="${s.name}" class="teacherAlertBtn px-3 py-1 border rounded text-xs">Alert</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
-          <div class="xl:col-span-3 card p-4">
-            <div class="flex items-center justify-between mb-2">
+        `;
+      }
+
+      function adminDashboard(){
+        // Admin: multi-chart + reports
+        return `
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold">Overall Snapshot</h3>
+              <div class="h-48 mt-3">
+                <canvas id="adminDoughnut"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded shadow col-span-2">
+              <h3 class="font-semibold">Monthly Trend</h3>
+              <div class="h-48 mt-3">
+                <canvas id="adminLine"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded shadow mt-4">
+            <div class="flex items-center justify-between mb-3">
               <h3 class="font-semibold">Reports</h3>
+              <div class="flex gap-2">
+                <button id="exportCsv" class="px-3 py-1 border rounded">Export CSV</button>
+              </div>
             </div>
-            <div class="scrollable-table">
-              <table class="min-w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Title</th>
-                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
-                  </tr>
+
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm sticky-head">
+                <thead>
+                  <tr class="text-xs text-gray-500"><th class="p-2 text-left">Report</th><th class="p-2">Type</th><th class="p-2">Created</th><th class="p-2">Action</th></tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                  <tr><td class="px-3 py-2">2025-09-18</td><td class="px-3 py-2">Monthly Attendance Summary</td><td class="px-3 py-2">Published</td></tr>
-                  <tr><td class="px-3 py-2">2025-09-12</td><td class="px-3 py-2">Department-wise Analysis</td><td class="px-3 py-2">Draft</td></tr>
-                  <tr><td class="px-3 py-2">2025-09-05</td><td class="px-3 py-2">Weekly Trend Report</td><td class="px-3 py-2">Published</td></tr>
+                <tbody>
+                  <tr><td class="p-2">Monthly - Class 10A</td><td class="p-2">CSV</td><td class="p-2">2025-09-01</td><td class="p-2"><button class="text-primary text-sm">Download</button></td></tr>
+                  <tr><td class="p-2">Daily Snapshot - 2025-09-18</td><td class="p-2">PDF</td><td class="p-2">2025-09-18</td><td class="p-2"><button class="text-primary text-sm">Download</button></td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
-      `;
-    }
-
-    function adminAttendanceHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">Attendance Log</h3>
-          <div class="scrollable-table">
-            <table class="min-w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Present</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Absent</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr><td class="px-3 py-2">2025-09-19</td><td class="px-3 py-2">10A</td><td class="px-3 py-2">28</td><td class="px-3 py-2">2</td></tr>
-                <tr><td class="px-3 py-2">2025-09-18</td><td class="px-3 py-2">10B</td><td class="px-3 py-2">27</td><td class="px-3 py-2">3</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function adminStudentsHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">All Students</h3>
-          <div class="scrollable-table">
-            <table class="min-w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                ${sampleStudents.map(s => `<tr><td class="px-3 py-2">${s.name}</td><td class="px-3 py-2">${s.class}</td></tr>`).join("")}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function adminTeachersHTML() {
-      return `
-        <div class="card p-4">
-          <h3 class="font-semibold mb-3">All Teachers</h3>
-          <div class="scrollable-table">
-            <table class="min-w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Department</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr><td class="px-3 py-2">Mrs. Gupta</td><td class="px-3 py-2">Mathematics</td></tr>
-                <tr><td class="px-3 py-2">Mr. Nair</td><td class="px-3 py-2">Physics</td></tr>
-                <tr><td class="px-3 py-2">Dr. Das</td><td class="px-3 py-2">Chemistry</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function adminReportsHTML() {
-      return adminDashboardHTML();
-    }
-
-    // --------- Init Dashboards ----------
-    function initStudentDashboard(section) {
-      // Charts
-      if (section === "dashboard") {
-        // Pie
-        const ctx = qs("#studentPie");
-        if (ctx && window.Chart) {
-          appState.charts.studentPie = new Chart(ctx, {
-            type: "doughnut",
-            data: { labels: ["Present","Absent"], datasets: [{ data: [34,6], backgroundColor: ["#10b981","#ef4444"] }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:"bottom"} }, cutout: "60%" }
-          });
-        }
-        // History
-        const hist = qs("#studentHistory");
-        if (hist) {
-          const rows = [
-            { date: "2025-09-18", subject: "Math", status: "Present" },
-            { date: "2025-09-17", subject: "Physics", status: "Absent" },
-            { date: "2025-09-16", subject: "Chemistry", status: "Present" },
-            { date: "2025-09-15", subject: "Biology", status: "Present" },
-          ];
-          hist.innerHTML = rows.map(r => `
-            <tr>
-              <td class="px-3 py-2">${r.date}</td>
-              <td class="px-3 py-2">${r.subject}</td>
-              <td class="px-3 py-2">
-                <span class="text-xs px-2 py-1 rounded ${r.status==="Present"?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}">${r.status}</span>
-              </td>
-            </tr>
-          `).join("");
-        }
-
-        // Camera & Location
-        wireStudentCameraAndLocation();
+        `;
       }
 
-      if (section === "attendance") {
-        const ctx2 = qs("#studentPie2");
-        if (ctx2 && window.Chart) {
-          appState.charts.studentPie2 = new Chart(ctx2, {
-            type: "doughnut",
-            data: { labels: ["Present","Absent"], datasets: [{ data: [3,1], backgroundColor: ["#3b82f6","#f59e0b"] }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:"bottom"} }, cutout: "60%" }
-          });
-        }
+      /* generic pages (attendance/students/etc) used for nav routes */
+      function attendancePage(){
+        return `
+          <div class="bg-white p-4 rounded shadow">
+            <h3 class="font-semibold">All Attendance Records</h3>
+            <div class="mt-3 overflow-x-auto">
+              <table class="min-w-full text-sm sticky-head">
+                <thead><tr class="text-xs text-gray-500"><th class="p-2">ID</th><th class="p-2">Student</th><th class="p-2">Status</th><th class="p-2">Timestamp</th></tr></thead>
+                <tbody>
+                  ${state.attendance.map(a => `<tr><td class="p-2">${a.id}</td><td class="p-2">${a.studentName}</td><td class="p-2">${a.status}</td><td class="p-2">${new Date(a.timestamp).toLocaleString()}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
       }
-    }
+      function studentsPage(){
+        return `
+          <div class="bg-white p-4 rounded shadow">
+            <h3 class="font-semibold">Students</h3>
+            <div class="mt-3">
+              <div class="flex gap-2 mb-3">
+                <input id="newStudentName" class="border px-2 py-1 rounded flex-1" placeholder="Student name" />
+                <select id="newStudentClass" class="border px-2 py-1 rounded"><option>10A</option><option>10B</option><option>11A</option></select>
+                <button id="addStudent" class="px-3 py-1 bg-primary text-white rounded">Add</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-sm sticky-head">
+                  <thead><tr class="text-xs text-gray-500"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Class</th><th class="p-2">Action</th></tr></thead>
+                  <tbody>
+                    ${state.students.map(s => `<tr><td class="p-2">${s.id}</td><td class="p-2">${s.name}</td><td class="p-2">${s.cls}</td><td class="p-2"><button data-id="${s.id}" class="editStudent text-sm text-primary">Edit</button></td></tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      function teachersPage(){
+        return `
+          <div class="bg-white p-4 rounded shadow">
+            <h3 class="font-semibold">Teachers</h3>
+            <div class="mt-3 overflow-x-auto">
+              <table class="min-w-full text-sm sticky-head">
+                <thead><tr class="text-xs text-gray-500"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Subject</th></tr></thead>
+                <tbody>
+                  ${state.teachers.map(t=>`<tr><td class="p-2">${t.id}</td><td class="p-2">${t.name}</td><td class="p-2">${t.subject}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+      function reportsPage(){
+        return `
+          <div class="bg-white p-4 rounded shadow">
+            <h3 class="font-semibold">Reports</h3>
+            <p class="text-sm text-gray-500 mt-2">Export CSV or PDF (demo client-side CSV available)</p>
+            <div class="mt-3">
+              <button id="exportCsvGlobal" class="px-3 py-1 border rounded">Export attendance CSV</button>
+            </div>
+          </div>
+        `;
+      }
+      function dashboardFallback(){ return `<div class="bg-white p-4 rounded shadow">Default content</div>`; }
 
-    function initTeacherDashboard(section) {
-      if (section === "dashboard") {
-        // Bar
-        const ctx = qs("#teacherBar");
-        if (ctx && window.Chart) {
-          appState.charts.teacherBar = new Chart(ctx, {
-            type: "bar",
-            data: {
-              labels: ["10A","10B","11A","11B","12A","12B"],
-              datasets: [{ label:"Present %", data: [90,86,88,84,92,89], backgroundColor: "#6366f1", borderRadius: 6 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
-          });
+      /* -------------------------
+         After-insert event wiring
+         ------------------------- */
+      async function wireUpAfterRender(){
+        // Update mobile role label
+        qs('#mobileRoleLabel').textContent = capitalize(state.currentRole);
+
+        // STUDENT UI wiring
+        const studentVideo = qs('#studentVideo');
+        const studentCamList = qs('#studentCameraList');
+        const studentStartCam = qs('#studentStartCam');
+        const studentMarkBtn = qs('#studentMarkBtn');
+        const liveLocationBtn = qs('#liveLocationBtn');
+        const liveLocationDisplay = qs('#liveLocationDisplay');
+
+        // populate camera devices
+        if (studentCamList) {
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cams = devices.filter(d=>d.kind === 'videoinput');
+            studentCamList.innerHTML = cams.map(c => `<option value="${c.deviceId}">${c.label || 'Camera'}</option>`).join('') || '<option>Default</option>';
+          } catch(e){
+            studentCamList.innerHTML = '<option>Default</option>';
+          }
         }
 
-        // Marking
-        const tbody = qs("#teacherList");
-        if (tbody) {
-          tbody.onclick = (e) => {
-            const row = e.target.closest("tr");
-            if (!row) return;
-            const id = row.dataset.id;
-            const badge = row.querySelector("td:nth-child(3) span");
-            if (e.target.classList.contains("present")) {
-              teacherRowStatus[id] = "Present";
-              badge.textContent = "Present";
-              badge.className = "inline-block text-xs px-2 py-1 rounded bg-green-50 text-green-700";
-            }
-            if (e.target.classList.contains("absent")) {
-              teacherRowStatus[id] = "Absent";
-              badge.textContent = "Absent";
-              badge.className = "inline-block text-xs px-2 py-1 rounded bg-red-50 text-red-700";
-            }
+        let studentStream = null;
+        if (studentStartCam) studentStartCam.onclick = async () => {
+          try {
+            if (studentStream) studentStream.getTracks().forEach(t=>t.stop());
+            const deviceId = studentCamList?.value;
+            studentStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio:false });
+            studentVideo.srcObject = studentStream;
+            toast('Camera started (allow permissions)');
+          } catch(err){
+            console.error(err);
+            toast('Camera permission denied or not available');
+          }
+        };
+
+        // Live location
+        if (liveLocationBtn) {
+          liveLocationBtn.onclick = async () => {
+            if (!navigator.geolocation) { toast('Geolocation API not supported'); return; }
+            liveLocationDisplay.textContent = 'Locating...';
+            navigator.geolocation.getCurrentPosition(pos => {
+              const lat = pos.coords.latitude, lon = pos.coords.longitude;
+              liveLocationDisplay.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+              toast('Location acquired');
+            }, err => {
+              console.warn(err);
+              liveLocationDisplay.textContent = 'Denied / unavailable';
+              toast('Location unavailable or denied');
+            }, { enableHighAccuracy:true, timeout:10000 });
           };
         }
-      }
-    }
 
-    function initAdminDashboard(section) {
-      if (section === "dashboard") {
-        const line = qs("#adminLine");
-        if (line && window.Chart) {
-          appState.charts.adminLine = new Chart(line, {
-            type: "line",
-            data: {
-              labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep"],
-              datasets: [{ label: "Attendance %", data: [86,88,85,89,91,90,92,93,94], borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.15)", tension: 0.35, fill: true }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
+        // Mark attendance button: capture snapshot + location and store record
+        if (studentMarkBtn) {
+          studentMarkBtn.onclick = async () => {
+            // snapshot not used beyond UX, capture for future
+            if (studentVideo && studentVideo.srcObject) {
+              const v = studentVideo;
+              const canvas = document.createElement('canvas');
+              canvas.width = v.videoWidth || 640;
+              canvas.height = v.videoHeight || 360;
+              canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+              // optional: convert to dataURL = canvas.toDataURL()
+            }
+            // get location
+            let location = null;
+            try{
+              location = await new Promise((res, rej) => {
+                navigator.geolocation.getCurrentPosition(p => res({ latitude: p.coords.latitude, longitude: p.coords.longitude }), e => res(null), {timeout:8000});
+              });
+            }catch(e){ location = null; }
+
+            const record = {
+              id: uid('R'),
+              studentId: 'S001',
+              studentName: 'You (Demo)',
+              status: 'Present',
+              role: 'student',
+              location,
+              timestamp: new Date().toISOString()
+            };
+            state.attendance.unshift(record);
+            saveAll();
+            toast('Attendance marked ✓');
+            render(); // re-render to refresh history & charts
+          };
+        }
+
+        // STUDENT CHART
+        const sd = qs('#studentDoughnut');
+        if (sd) {
+          const present = state.attendance.filter(a=>a.status==='Present').length;
+          const absent = state.attendance.filter(a=>a.status==='Absent').length;
+          createDoughnut(sd, ['Present','Absent'], [present, absent]);
+        }
+
+        /* TEACHER UI wiring */
+        const teacherClassSelect = qs('#teacherClassSelect');
+        if (teacherClassSelect) {
+          teacherClassSelect.onchange = () => {
+            updateTeacherBar();
+          };
+          // Add student by teacher
+          const teacherAddBtn = qs('#teacherAddStudentBtn');
+          if (teacherAddBtn) teacherAddBtn.onclick = () => {
+            const name = qs('#teacherAddName').value.trim();
+            const cls = teacherClassSelect.value || uniqueClasses()[0] || '10A';
+            if (!name) { toast('Enter student name'); return; }
+            state.students.push({ id: uid('S'), name, cls });
+            saveAll();
+            toast('Student added');
+            render();
+          };
+        }
+
+        // teacher present/absent buttons
+        qsa('.teacherPresentBtn').forEach(btn => btn.onclick = () => {
+          const id = btn.dataset.id;
+          const s = state.students.find(x=>x.id===id);
+          if (!s) return;
+          state.attendance.unshift({ id:uid('R'), studentId:id, studentName:s.name, status:'Present', role:'teacher', location:null, timestamp:new Date().toISOString() });
+          saveAll();
+          toast(`${s.name} marked Present`);
+          render();
+        });
+        qsa('.teacherAbsentBtn').forEach(btn => btn.onclick = () => {
+          const id = btn.dataset.id;
+          const s = state.students.find(x=>x.id===id);
+          if (!s) return;
+          state.attendance.unshift({ id:uid('R'), studentId:id, studentName:s.name, status:'Absent', role:'teacher', location:null, timestamp:new Date().toISOString() });
+          saveAll();
+          toast(`${s.name} marked Absent`);
+          render();
+        });
+        qsa('.teacherAlertBtn').forEach(btn => btn.onclick = async () => {
+          const name = btn.dataset.name;
+          if ("Notification" in window && Notification.permission === "granted") new Notification('TrackED Alert', { body: `Alert sent to ${name} (demo)` });
+          else if ("Notification" in window && Notification.permission !== "denied") {
+            const p = await Notification.requestPermission();
+            if (p === 'granted') new Notification('TrackED Alert', { body: `Alert sent to ${name} (demo)` });
+            else alert(`Alert (demo) to ${name}`);
+          } else alert(`Alert (demo) to ${name}`);
+        });
+
+        // teacher bar chart update
+        function updateTeacherBar(){
+          const canvas = qs('#teacherBar');
+          if (!canvas) return;
+          const selClass = qs('#teacherClassSelect')?.value || uniqueClasses()[0];
+          // labels: classes
+          const classes = uniqueClasses();
+          const data = classes.map(cls => {
+            // simple %: present marked / total marked for class
+            const ids = state.students.filter(s=>s.cls===cls).map(s=>s.id);
+            const marked = state.attendance.filter(a=>ids.includes(a.studentId));
+            if (marked.length === 0) return randomBetween(75,95);
+            const p = Math.round((marked.filter(m=>m.status==='Present').length / marked.length) * 100);
+            return p;
           });
+          createBar(canvas, classes, data);
         }
-        const bar = qs("#adminBar");
-        if (bar && window.Chart) {
-          appState.charts.adminBar = new Chart(bar, {
-            type: "bar",
-            data: { labels: ["10A","10B","11A","11B","12A","12B"], datasets: [{ label:"Avg %", data:[91,87,88,86,92,89], backgroundColor:"#10b981", borderRadius:6 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
-          });
+        updateTeacherBar(); // initial
+
+        /* ADMIN CHARTS and actions */
+        const adminD = qs('#adminDoughnut');
+        const adminL = qs('#adminLine');
+        if (adminD) {
+          const pres = state.attendance.filter(a=>a.status==='Present').length;
+          const abs = state.attendance.filter(a=>a.status==='Absent').length;
+          createDoughnut(adminD, ['Present','Absent'], [pres, abs]);
         }
+        if (adminL) {
+          const months = ['Jan','Feb','Mar','Apr','May','Jun'];
+          const data = months.map((m,i) => randomBetween(80,95));
+          createLine(adminL, months, data);
+        }
+
+        // Add student in generic students page
+        const addStudentBtn = qs('#addStudent');
+        if (addStudentBtn) addStudentBtn.onclick = () => {
+          const n = qs('#newStudentName').value.trim();
+          const c = qs('#newStudentClass').value;
+          if (!n) { toast('Enter name'); return; }
+          state.students.push({ id: uid('S'), name:n, cls:c });
+          saveAll();
+          toast('Student added');
+          render();
+        };
+
+        // CSV export (admin)
+        const exportCsvBtn = qs('#exportCsv') || qs('#exportCsvGlobal') || qs('#exportCsvGlobal');
+        if (exportCsvBtn) exportCsvBtn.onclick = () => {
+          const rows = [['id','studentName','status','timestamp','lat','lon']];
+          state.attendance.forEach(r => rows.push([r.id, r.studentName, r.status, r.timestamp, r.location?.latitude || '', r.location?.longitude || '']));
+          const csv = rows.map(row => row.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `attendance_${new Date().toISOString().slice(0,10)}.csv`;
+          document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          toast('CSV exported (client-side)');
+        };
+
+        // edit student
+        qsa('.editStudent').forEach(btn => btn.onclick = () => {
+          const id = btn.dataset.id;
+          const s = state.students.find(x=>x.id===id);
+          if (!s) return;
+          const name = prompt('Edit name', s.name);
+          if (name) { s.name = name; saveAll(); render(); }
+        });
+
+        // make tables responsive and charts resize on next tick
+        setTimeout(()=> window.dispatchEvent(new Event('resize')), 80);
       }
-    }
 
-    // --------- Camera & Geolocation (Student) ----------
-    let activeStream = null;
-    async function startCamera(videoEl) {
-      if (activeStream) stopCamera();
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera not supported");
+      /* -------------------------
+         Wiring: global nav & auth
+         ------------------------- */
+      function setupGlobal(){
+        // nav links
+        qsa('.nav-link').forEach(a => a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const target = a.dataset.target;
+          state.currentSection = target || 'dashboard';
+          render();
+          // hide sidebar on mobile if present
+          if (window.innerWidth < 768) {
+            const sidebar = document.querySelector('aside#sidebar');
+            if (sidebar) sidebar.classList.add('hidden');
+          }
+        }));
+
+        // mobile menu open/close
+        qs('#mobileMenuBtn')?.addEventListener('click', ()=> {
+          const aside = qs('aside#sidebar');
+          if (aside) aside.classList.toggle('hidden');
+        });
+
+        // role switcher (desktop)
+        qs('#roleSwitcher')?.addEventListener('change', (e) => {
+          state.currentRole = e.target.value;
+          localStorage.setItem('tracked_role', state.currentRole);
+          // default to dashboard on role change
+          state.currentSection = 'dashboard';
+          render();
+        });
+
+        // auth modal interactions
+        qs('#loginTab')?.addEventListener('click', ()=> {
+          qs('#loginForm').classList.remove('hidden');
+          qs('#registerForm').classList.add('hidden');
+        });
+        qs('#registerTab')?.addEventListener('click', ()=> {
+          qs('#loginForm').classList.add('hidden');
+          qs('#registerForm').classList.remove('hidden');
+        });
+
+        // sign in
+        qs('#loginForm')?.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const role = qs('#loginRole')?.value || 'student';
+          state.currentRole = role;
+          localStorage.setItem('tracked_role', role);
+          qs('#authModal')?.classList.add('hidden');
+          render();
+        });
+
+        // sign up (quick demo)
+        qs('#registerBtn')?.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const role = qs('#regRole')?.value || 'student';
+          state.currentRole = role;
+          localStorage.setItem('tracked_role', role);
+          qs('#authModal')?.classList.add('hidden');
+          toast('Account created (demo)');
+          render();
+        });
+
+        // open auth on mobile topbar
+        qs('#openAuth')?.addEventListener('click', ()=> qs('#authModal')?.classList.remove('hidden'));
+        qs('#closeAuth')?.addEventListener('click', ()=> qs('#authModal')?.classList.add('hidden'));
+
+        // close auth if clicking outside modal (optional)
+        qs('#authModal')?.addEventListener('click', (e) => {
+          if (e.target === qs('#authModal')) qs('#authModal').classList.add('hidden');
+        });
+
+        // initial role sync
+        const roleSel = qs('#roleSwitcher');
+        if (roleSel) roleSel.value = state.currentRole;
       }
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-      videoEl.srcObject = stream;
-      await new Promise(res => { videoEl.onloadedmetadata = () => { videoEl.play(); res(); }; });
-      activeStream = stream;
-    }
-    function stopCamera() {
-      try { activeStream?.getTracks()?.forEach(t => t.stop()); } catch {}
-      activeStream = null;
-    }
 
-    function wireStudentCameraAndLocation() {
-      const video = qs("#studentVideo");
-      const startBtn = qs("#startCamBtn");
-      const stopBtn = qs("#stopCamBtn");
-      const camStatus = qs("#camStatus");
-      const locBtn = qs("#locBtn");
-      const locText = qs("#locText");
-      const mapLink = qs("#mapLink");
+      /* -------------------------
+         Utilities & small helpers
+         ------------------------- */
+      function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+      function statusBadge(s){ return s === 'Present' ? '<span class="text-green-700 bg-green-50 px-2 py-0.5 rounded text-xs">Present</span>' : '<span class="text-red-700 bg-red-50 px-2 py-0.5 rounded text-xs">Absent</span>'; }
+      function uniqueClasses(){ return Array.from(new Set(state.students.map(s=>s.cls || '10A'))); }
+      function randomBetween(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
 
-      startBtn.onclick = async () => {
-        try {
-          camStatus.textContent = "Camera: requesting permission…";
-          await startCamera(video);
-          camStatus.textContent = "Camera: live";
-          startBtn.classList.add("hidden");
-          stopBtn.classList.remove("hidden");
-        } catch (e) {
-          camStatus.textContent = "Camera: unavailable or permission denied";
-        }
-      };
-      stopBtn.onclick = () => {
-        stopCamera();
-        camStatus.textContent = "Camera: stopped";
-        stopBtn.classList.add("hidden");
-        startBtn.classList.remove("hidden");
-      };
-
-      locBtn.onclick = () => {
-        locText.textContent = "Getting current position…";
-        if (!navigator.geolocation) {
-          locText.textContent = "Geolocation not supported";
-          return;
-        }
-        navigator.geolocation.getCurrentPosition((pos) => {
-          const { latitude, longitude, accuracy } = pos.coords;
-          locText.textContent = `Lat ${latitude.toFixed(5)}, Lng ${longitude.toFixed(5)} (±${Math.round(accuracy)}m)`;
-          mapLink.href = `https://maps.google.com/?q=${latitude},${longitude}`;
-          mapLink.classList.remove("hidden");
-        }, (err) => {
-          locText.textContent = `Location error: ${err.message}`;
-        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-      };
-    }
-
-    // --------- Init App ----------
-    function init() {
-      secureBanner();
-      wireLayout();
-      renderAuthModal(!appState.currentUser);
-      updateProfile();
-      renderDashboard(appState.currentRole, appState.currentSection);
-
-      // Resize charts on window resize
-      window.addEventListener("resize", () => {
-        Object.values(appState.charts).forEach(c => { try { c.resize(); } catch {} });
+      /* -------------------------
+         Boot
+         ------------------------- */
+      window.addEventListener('load', () => {
+        setupGlobal();
+        // if no role persisted, show auth modal else hide
+        if (!localStorage.getItem('tracked_role')) qs('#authModal')?.classList.remove('hidden');
+        else qs('#authModal')?.classList.add('hidden');
+        render();
       });
-    }
-
-    document.addEventListener("DOMContentLoaded", init);
-  </script>
-</body>
+      window.addEventListener('beforeunload', saveAll);
+    </script>
+  </body>
 </html>
