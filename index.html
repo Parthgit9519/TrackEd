@@ -6,331 +6,165 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
+  <meta name="theme-color" content="#1e40af" />
   <title>TrackED - Attendance Management System</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
-  <!-- Font Awesome (icons) -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-  />
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: "#1e40af",
-            secondary: "#3b82f6",
-            accent: "#6366f1",
-            success: "#10b981",
-            warning: "#f59e0b",
-            danger: "#ef4444",
-          },
-        },
-      },
-    };
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
 
   <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-    .glass-effect { backdrop-filter: blur(10px); background-color: rgba(255,255,255,0.75); }
-    .hover-lift { transition: all 0.3s ease; }
-    .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-
-    /* Scrollable table container + gradient edge (light mode) */
-    .scrollable-table-container { position: relative; }
-    body:not(.dark) .scrollable-table-container::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 30px;
-      background: linear-gradient(to left, rgba(249,250,251,1), transparent);
-      pointer-events: none;
+    /* Motion accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      html:focus-within { scroll-behavior: auto !important; }
     }
 
-    /* Sticky table headers */
-    .scrollable-table-container thead th {
-      position: sticky;
-      top: 0;
-      background: #f9fafb;
-      z-index: 1;
-    }
+    /* Sticky headers for tables */
+    .scrollable-table { overflow-x: auto; }
+    .scrollable-table thead th { position: sticky; top: 0; background: #f9fafb; z-index: 1; }
 
-    /* Default table padding, compact on small screens */
-    .scrollable-table-container table th,
-    .scrollable-table-container table td {
-      padding: 0.75rem 1rem;
-    }
+    /* Chart containers */
+    .chart-box { height: 20rem; }
+    @media (max-width: 640px) { .chart-box { height: 16rem; } }
+
+    /* Video aspect ratio and fit */
+    .video-wrap { aspect-ratio: 16 / 9; background: #000; border-radius: 0.75rem; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Sidebar slide on mobile */
+    .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+    .sidebar.open { transform: translateX(0); }
+
+    /* Active nav link */
+    .nav-link.active { background: #eef2ff; color: #1e40af; }
+
+    /* Simple card */
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+
+    /* Compact table on small screens */
     @media (max-width: 640px) {
-      .scrollable-table-container table th,
-      .scrollable-table-container table td {
-        padding: 0.5rem 0.75rem !important;
-        white-space: nowrap;
-        font-size: 0.875rem;
-      }
+      .scrollable-table table th, .scrollable-table table td { padding: 0.5rem 0.75rem !important; white-space: nowrap; font-size: 0.875rem; }
     }
-
-    /* Dark gradient for right edge if dark mode is used */
-    body.dark .scrollable-table-container::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 30px;
-      background: linear-gradient(to left, rgba(17,24,39,1), transparent);
-      pointer-events: none;
-    }
-
-    /* Chart containers scale by height */
-    .chart-auto { height: 20rem; }
-    @media (max-width: 640px) {
-      .chart-auto { height: 16rem; }
-    }
-
-    /* Safe-area support for modern phones */
-    :root {
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    nav.sticky { padding-top: max(0px, var(--safe-top)); }
-    .modal-safe { padding-bottom: max(1rem, calc(1rem + var(--safe-bottom))); }
-
-    /* Prevent dropdown clipping on short viewports */
-    #profileDropdown { max-height: 60vh; overflow: auto; }
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen">
+<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen text-gray-800">
+  <!-- Env banner -->
+  <div id="envBanner" class="hidden px-4 py-2 text-sm bg-yellow-50 text-yellow-800 border-b border-yellow-200 text-center"></div>
+
   <!-- Auth Modal -->
-  <div
-    id="authModal"
-    class="fixed inset-0 bg-gradient-to-br from-blue-900/80 via-purple-900/80 to-indigo-900/80 flex items-center justify-center z-50 p-4"
-  >
-    <div
-      class="glass-effect rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 transform transition-all duration-500 scale-100 shadow-2xl border border-white/20"
-    >
+  <div id="authModal" class="fixed inset-0 hidden items-center justify-center z-50 p-4">
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-purple-900/70 to-indigo-900/70"></div>
+    <div class="relative card w-full max-w-md p-6 sm:p-8">
       <div class="text-center mb-6">
-        <div
-          class="bg-gradient-to-r from-blue-600 to-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
-        >
-          <i class="fas fa-graduation-cap text-white text-2xl"></i>
+        <div class="mx-auto w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 grid place-items-center text-white text-2xl shadow">
+          📚
         </div>
-        <h1
-          class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2"
-        >
-          TrackED
-        </h1>
-        <p class="text-gray-200">Student Attendance Management System</p>
+        <h1 class="mt-3 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">TrackED</h1>
+        <p class="text-gray-500 text-sm">Attendance Management System</p>
       </div>
 
-      <div class="flex mb-6 bg-gray-100 rounded-xl p-1">
-        <button
-          id="loginTab"
-          class="flex-1 py-3 text-center rounded-lg bg-primary text-white transition-all duration-300 font-medium shadow-md"
-        >
-          Sign In
-        </button>
-        <button
-          id="registerTab"
-          class="flex-1 py-3 text-center rounded-lg text-gray-600 transition-all duration-300 font-medium"
-        >
-          Sign Up
-        </button>
+      <div class="grid grid-cols-2 gap-2 bg-gray-100 rounded-xl p-1">
+        <button id="loginTab" class="py-2 rounded-lg bg-indigo-900 text-white text-sm font-medium">Sign In</button>
+        <button id="registerTab" class="py-2 rounded-lg text-gray-700 text-sm font-medium">Sign Up</button>
       </div>
 
-      <form id="loginForm" class="space-y-4">
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            id="loginEmail"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            required
-            value="student@tracked.com"
-          />
+      <!-- Sign In -->
+      <form id="loginForm" class="mt-4 space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input id="loginEmail" type="email" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" value="student@tracked.com" />
         </div>
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            id="loginPassword"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            required
-            value="password123"
-          />
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input id="loginPassword" type="password" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" value="password123" />
         </div>
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Role</label>
-          <select
-            id="loginRole"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-          >
+        <div>
+          <label class="block text-sm font-medium mb-1">Role</label>
+          <select id="loginRole" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
         </div>
-        <button
-          type="submit"
-          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          Sign In
-        </button>
+        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg py-2.5 font-medium">Sign In</button>
       </form>
 
-      <form id="registerForm" class="space-y-4 hidden">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Sign Up -->
+      <form id="registerForm" class="mt-4 space-y-4 hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-            <input
-              type="text"
-              id="regFirstName"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              required
-            />
+            <label class="block text-sm font-medium mb-1">First Name</label>
+            <input id="regFirstName" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-            <input
-              type="text"
-              id="regLastName"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              required
-            />
+            <label class="block text-sm font-medium mb-1">Last Name</label>
+            <input id="regLastName" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-          <input
-            type="email"
-            id="regEmail"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            required
-          />
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input id="regEmail" type="email" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-          <input
-            type="password"
-            id="regPassword"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            required
-          />
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input id="regPassword" type="password" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-          <select
-            id="regRole"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-          >
+          <label class="block text-sm font-medium mb-1">Role</label>
+          <select id="regRole" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
         </div>
 
-        <!-- Conditional student fields -->
-        <div id="studentFields" class="space-y-4">
+        <!-- Student extra -->
+        <div id="studentExtra" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Student ID</label>
-            <input
-              type="text"
-              id="regStudentId"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Class</label>
-            <select
-              id="regClass"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="10A">Class 10A</option>
-              <option value="10B">Class 10B</option>
-              <option value="11A">Class 11A</option>
-              <option value="11B">Class 11B</option>
-              <option value="12A">Class 12A</option>
-              <option value="12B">Class 12B</option>
+            <label class="block text-sm font-medium mb-1">Class</label>
+            <select id="regClass" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option>10A</option><option>10B</option><option>11A</option><option>11B</option><option>12A</option><option>12B</option>
             </select>
           </div>
         </div>
 
-        <!-- Conditional teacher fields -->
-        <div id="teacherFields" class="space-y-4 hidden">
+        <!-- Teacher extra -->
+        <div id="teacherExtra" class="space-y-3 hidden">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
-            <input
-              type="text"
-              id="regEmpId"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-            <select
-              id="regSubject"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="Mathematics">Mathematics</option>
-              <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemistry</option>
-              <option value="Biology">Biology</option>
-              <option value="English">English</option>
-              <option value="History">History</option>
+            <label class="block text-sm font-medium mb-1">Department</label>
+            <select id="regDepartment" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>English</option><option>Computer Science</option>
             </select>
           </div>
         </div>
 
-        <button
-          type="submit"
-          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          Create Account
-        </button>
+        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg py-2.5 font-medium">Create Account</button>
       </form>
     </div>
   </div>
 
   <!-- App Shell -->
   <div class="min-h-screen">
-    <!-- Top Nav -->
-    <nav class="sticky top-0 z-40 bg-white/70 backdrop-blur border-b border-gray-200">
+    <!-- Top Navbar -->
+    <nav class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="h-14 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <button
-              id="openSidebarBtn"
-              class="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 text-gray-700"
-              aria-label="Open sidebar"
-            >
-              <i class="fas fa-bars text-lg"></i>
-            </button>
+            <button id="openSidebar" class="md:hidden w-9 h-9 grid place-items-center border rounded-lg text-gray-700" aria-label="Open menu">☰</button>
             <div class="flex items-center gap-2">
-              <div
-                class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white"
-              >
-                <i class="fas fa-check"></i>
-              </div>
-              <span class="font-semibold text-gray-800">TrackED</span>
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white">✔</div>
+              <span class="font-semibold">TrackED</span>
             </div>
           </div>
 
           <div class="flex items-center gap-3">
             <div class="hidden sm:flex items-center gap-2">
               <span class="text-sm text-gray-600">Role</span>
-              <select
-                id="roleSwitcher"
-                class="px-2 py-1.5 border border-gray-300 rounded-md text-sm"
-              >
+              <select id="roleSwitcher" class="px-2 py-1.5 border rounded-md text-sm">
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
                 <option value="admin">Admin</option>
@@ -338,35 +172,17 @@
             </div>
 
             <div class="relative">
-              <button
-                id="profileBtn"
-                class="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <img
-                  src="https://i.pravatar.cc/40?img=13"
-                  alt="avatar"
-                  class="w-8 h-8 rounded-full"
-                />
-                <i class="fas fa-chevron-down text-gray-500"></i>
+              <button id="profileBtn" class="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                <img src="https://i.pravatar.cc/40?img=13" alt="avatar" class="w-8 h-8 rounded-full" loading="lazy" decoding="async" />
+                <span class="text-gray-600 text-sm">Profile</span>
               </button>
-              <div
-                id="profileDropdown"
-                class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-2"
-              >
+              <div id="profileMenu" class="hidden absolute right-0 mt-2 w-56 card p-2">
                 <div class="px-3 py-2">
-                  <p class="text-sm font-medium">Alex Johnson</p>
-                  <p class="text-xs text-gray-500">alex.johnson@example.com</p>
+                  <p id="profileName" class="text-sm font-medium">Guest</p>
+                  <p id="profileEmail" class="text-xs text-gray-500">guest@example.com</p>
                 </div>
                 <hr />
-                <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm">
-                  Profile
-                </button>
-                <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm">
-                  Settings
-                </button>
-                <button id="signOutBtn" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm text-danger">
-                  Sign out
-                </button>
+                <button id="logoutBtn" class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm text-red-600">Logout</button>
               </div>
             </div>
           </div>
@@ -374,61 +190,36 @@
       </div>
     </nav>
 
-    <!-- Sidebar + Content -->
+    <!-- Layout -->
     <div class="flex">
-      <!-- Sidebar overlay (mobile) -->
-      <div
-        id="sidebarOverlay"
-        class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"
-      ></div>
+      <!-- Sidebar overlay -->
+      <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 hidden md:hidden"></div>
 
       <!-- Sidebar -->
-      <aside
-        id="sidebar"
-        class="fixed md:static z-40 top-0 left-0 h-full md:h-auto w-72 md:w-64 bg-white border-r border-gray-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300"
-        aria-label="Sidebar"
-      >
+      <aside id="sidebar" class="sidebar fixed md:static top-0 left-0 h-full md:h-auto w-72 md:w-64 bg-white border-r border-gray-200 z-30">
         <div class="h-14 md:hidden"></div>
         <div class="p-4">
-          <div class="mb-4">
-            <div class="md:hidden flex items-center gap-2 mb-4">
-              <span class="font-semibold text-gray-800">Menu</span>
-              <button
-                id="closeSidebarBtn"
-                class="ml-auto inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 text-gray-700"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <nav class="space-y-1">
-              <a href="#" data-target="dashboard" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                <i class="fas fa-chart-pie w-5 text-gray-500"></i> Dashboard
-              </a>
-              <a href="#" data-target="attendance" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                <i class="fas fa-calendar-check w-5 text-gray-500"></i> Attendance
-              </a>
-              <a href="#" data-target="students" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                <i class="fas fa-user-graduate w-5 text-gray-500"></i> Students
-              </a>
-              <a href="#" data-target="teachers" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                <i class="fas fa-chalkboard-teacher w-5 text-gray-500"></i> Teachers
-              </a>
-              <a href="#" data-target="reports" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                <i class="fas fa-file-alt w-5 text-gray-500"></i> Reports
-              </a>
-            </nav>
+          <div class="md:hidden flex items-center gap-2 mb-4">
+            <span class="font-semibold">Menu</span>
+            <button id="closeSidebar" class="ml-auto w-9 h-9 grid place-items-center border rounded-lg text-gray-700" aria-label="Close menu">✕</button>
           </div>
+          <nav class="space-y-1">
+            <a href="#" data-section="dashboard" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🏠 Dashboard</a>
+            <a href="#" data-section="attendance" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🗓 Attendance</a>
+            <a href="#" data-section="students" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">🎓 Students</a>
+            <a href="#" data-section="teachers" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">👩‍🏫 Teachers</a>
+            <a href="#" data-section="reports" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">📑 Reports</a>
+          </nav>
         </div>
       </aside>
 
-      <!-- Main Content -->
+      <!-- Main -->
       <main class="flex-1 min-w-0">
         <div class="max-w-7xl mx-auto p-4 sm:p-6">
           <div class="mb-4 sm:mb-6">
-            <h2 id="pageTitle" class="text-lg sm:text-xl font-semibold text-gray-800">Dashboard</h2>
+            <h2 id="pageTitle" class="text-lg sm:text-xl font-semibold">Dashboard</h2>
             <p class="text-sm text-gray-500">Welcome to TrackED</p>
           </div>
-
           <div id="content" class="space-y-6"></div>
         </div>
       </main>
@@ -436,509 +227,739 @@
   </div>
 
   <script>
-    // --- State ---
-    const chartInstances = {};
-    let currentRole = "student";
-    let currentSection = "dashboard";
+    // --------- State & Storage ----------
+    const LS_KEYS = {
+      role: "tracked_role",
+      section: "tracked_section",
+      user: "tracked_user"
+    };
 
-    // --- Helpers ---
-    function qs(sel, root = document) { return root.querySelector(sel); }
-    function qsa(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
+    const getLS = (k, def=null) => {
+      try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; }
+    };
+    const setLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+    const delLS = (k) => { try { localStorage.removeItem(k); } catch {} };
 
-    function debounce(fn, wait = 150) {
-      let t;
-      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+    const appState = {
+      currentRole: getLS(LS_KEYS.role, "student"),
+      currentSection: getLS(LS_KEYS.section, "dashboard"),
+      currentUser: getLS(LS_KEYS.user, null),
+      charts: {}
+    };
+
+    // Sample data
+    const sampleStudents = [
+      { id: "s1", name: "Rohan Sharma", class: "10A" },
+      { id: "s2", name: "Priya Singh", class: "10B" },
+      { id: "s3", name: "Aarav Mehta", class: "11A" },
+      { id: "s4", name: "Isha Patel", class: "12B" },
+    ];
+
+    const teacherRowStatus = {}; // id -> "Present"/"Absent"/undefined
+
+    // --------- Utilities ----------
+    const qs = (s, r=document) => r.querySelector(s);
+    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
+    function secureBanner() {
+      const ok = window.isSecureContext || isLocalhost;
+      const el = qs("#envBanner");
+      if (!ok) {
+        el.textContent = "Tip: Use HTTPS or localhost for camera and location permissions.";
+        el.classList.remove("hidden");
+      }
     }
 
-    // Hide low-priority table columns on mobile by header text
-    function applyResponsiveTables() {
-      const hideOnMobile = new Set(["Marked By", "Actions", "# Students", "Timestamp", "Role", "Status"]);
-      const small = window.innerWidth < 640;
+    // Cleanup charts before re-creating
+    function destroyCharts() {
+      Object.values(appState.charts).forEach(c => { try { c.destroy(); } catch {} });
+      appState.charts = {};
+    }
 
-      qsa(".scrollable-table-container table").forEach(table => {
-        const headerCells = Array.from(table.querySelectorAll("thead th"));
-        const hideIdxs = headerCells
-          .map((th, i) => hideOnMobile.has(th.textContent.trim()) ? i : -1)
-          .filter(i => i >= 0);
+    // --------- Auth Modal ----------
+    function renderAuthModal(show = true) {
+      const modal = qs("#authModal");
+      modal.classList.toggle("hidden", !show);
 
-        hideIdxs.forEach(idx => {
-          table.querySelectorAll("tr").forEach(tr => {
-            const cell = tr.children[idx];
-            if (cell) cell.classList.toggle("hidden", small);
-          });
-        });
+      // Tabs
+      const loginTab = qs("#loginTab");
+      const registerTab = qs("#registerTab");
+      const loginForm = qs("#loginForm");
+      const registerForm = qs("#registerForm");
+      const studentExtra = qs("#studentExtra");
+      const teacherExtra = qs("#teacherExtra");
 
-        table.classList.toggle("text-xs", small);
+      loginTab.onclick = () => {
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        loginTab.classList.add("bg-indigo-900","text-white");
+        registerTab.classList.remove("bg-indigo-900","text-white");
+      };
+      registerTab.onclick = () => {
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        registerTab.classList.add("bg-indigo-900","text-white");
+        loginTab.classList.remove("bg-indigo-900","text-white");
+      };
+
+      // Role-specific fields in Sign Up
+      qs("#regRole").onchange = (e) => {
+        const v = e.target.value;
+        studentExtra.classList.toggle("hidden", v !== "student");
+        teacherExtra.classList.toggle("hidden", v !== "teacher");
+      };
+
+      // Sign In
+      loginForm.onsubmit = (e) => {
+        e.preventDefault();
+        const role = qs("#loginRole").value;
+        const email = qs("#loginEmail").value.trim();
+        const name = email ? email.split("@")[0] : "User";
+        appState.currentRole = role;
+        appState.currentSection = "dashboard";
+        appState.currentUser = { name, email, role };
+        setLS(LS_KEYS.role, role);
+        setLS(LS_KEYS.section, "dashboard");
+        setLS(LS_KEYS.user, appState.currentUser);
+        modal.classList.add("hidden");
+        qs("#roleSwitcher").value = role;
+        updateProfile();
+        renderDashboard(appState.currentRole, appState.currentSection);
+      };
+
+      // Sign Up
+      registerForm.onsubmit = (e) => {
+        e.preventDefault();
+        const role = qs("#regRole").value;
+        const name = `${qs("#regFirstName").value.trim()} ${qs("#regLastName").value.trim()}`.trim();
+        const email = qs("#regEmail").value.trim();
+        // Extra capture (not persisted for demo beyond profile)
+        const cls = qs("#regClass").value;
+        const dept = qs("#regDepartment").value;
+        appState.currentRole = role;
+        appState.currentSection = "dashboard";
+        appState.currentUser = { name, email, role, class: cls, department: dept };
+        setLS(LS_KEYS.role, role);
+        setLS(LS_KEYS.section, "dashboard");
+        setLS(LS_KEYS.user, appState.currentUser);
+        modal.classList.add("hidden");
+        qs("#roleSwitcher").value = role;
+        updateProfile();
+        renderDashboard(appState.currentRole, appState.currentSection);
+      };
+    }
+
+    function updateProfile() {
+      const u = appState.currentUser || { name: "Guest", email: "guest@example.com" };
+      qs("#profileName").textContent = u.name || "Guest";
+      qs("#profileEmail").textContent = u.email || "guest@example.com";
+    }
+
+    // --------- Layout Wiring ----------
+    function wireLayout() {
+      // Sidebar open/close
+      const sidebar = qs("#sidebar");
+      const overlay = qs("#sidebarOverlay");
+      qs("#openSidebar").onclick = () => { sidebar.classList.add("open"); overlay.classList.remove("hidden"); };
+      qs("#closeSidebar").onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+      overlay.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+
+      // Profile dropdown
+      const profileBtn = qs("#profileBtn");
+      const profileMenu = qs("#profileMenu");
+      profileBtn.onclick = (e) => {
+        e.stopPropagation();
+        profileMenu.classList.toggle("hidden");
+      };
+      document.addEventListener("click", () => profileMenu.classList.add("hidden"));
+
+      // Logout
+      qs("#logoutBtn").onclick = () => {
+        delLS(LS_KEYS.role); delLS(LS_KEYS.section); delLS(LS_KEYS.user);
+        appState.currentRole = "student";
+        appState.currentSection = "dashboard";
+        appState.currentUser = null;
+        destroyCharts();
+        renderAuthModal(true);
+      };
+
+      // Role switcher
+      const roleSel = qs("#roleSwitcher");
+      roleSel.value = appState.currentRole;
+      roleSel.onchange = (e) => {
+        appState.currentRole = e.target.value;
+        appState.currentSection = "dashboard";
+        setLS(LS_KEYS.role, appState.currentRole);
+        setLS(LS_KEYS.section, appState.currentSection);
+        destroyCharts();
+        renderDashboard(appState.currentRole, appState.currentSection);
+      };
+
+      // Sidebar nav
+      qsa(".nav-link").forEach(a => {
+        a.onclick = (e) => {
+          e.preventDefault();
+          const section = a.dataset.section;
+          appState.currentSection = section;
+          setLS(LS_KEYS.section, section);
+          qsa(".nav-link").forEach(n => n.classList.remove("active"));
+          a.classList.add("active");
+          destroyCharts();
+          renderDashboard(appState.currentRole, appState.currentSection);
+          sidebar.classList.remove("open");
+          overlay.classList.add("hidden");
+        };
       });
     }
 
-    const resizeCharts = debounce(() => {
-      Object.values(chartInstances).forEach(c => c && c.resize());
-    }, 120);
+    // --------- Dashboard Renderers ----------
+    function renderDashboard(role, section) {
+      qs("#pageTitle").textContent = `${role.charAt(0).toUpperCase()+role.slice(1)} Dashboard`;
+      qsa(".nav-link").forEach(n => n.classList.toggle("active", n.dataset.section === section));
+      const c = qs("#content");
+      c.innerHTML = "";
 
-    // --- Charts ---
-    function initStudentChart() {
-      const ctx = qs("#studentAttendanceChart");
-      if (!ctx) return;
-      chartInstances.studentAttendanceChart?.destroy?.();
-      chartInstances.studentAttendanceChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-          datasets: [{
-            label: "Attendance %",
-            data: [92, 88, 96, 90, 94],
-            backgroundColor: "rgba(59,130,246,0.5)",
-            borderColor: "rgba(59,130,246,1)",
-            borderWidth: 1,
-            borderRadius: 6,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.05)" } },
-            x: { grid: { display: false } }
-          },
-          plugins: { legend: { display: false } },
-        },
-      });
-    }
-
-    function initTeacherChart() {
-      const ctx = qs("#teacherAnalyticsChart");
-      if (!ctx) return;
-      chartInstances.teacherAnalyticsChart?.destroy?.();
-      chartInstances.teacherAnalyticsChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-          datasets: [{
-            label: "Class 10A",
-            data: [85, 88, 90, 92],
-            borderColor: "rgba(99,102,241,1)",
-            backgroundColor: "rgba(99,102,241,0.2)",
-            tension: 0.35,
-            fill: true,
-            pointRadius: 3,
-          }, {
-            label: "Class 10B",
-            data: [80, 84, 86, 89],
-            borderColor: "rgba(16,185,129,1)",
-            backgroundColor: "rgba(16,185,129,0.2)",
-            tension: 0.35,
-            fill: true,
-            pointRadius: 3,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, max: 100 },
-            x: { grid: { display: false } }
-          },
-          plugins: { legend: { position: "bottom" } },
-        },
-      });
-    }
-
-    function initTeacherComparisonChart() {
-      const ctx = qs("#teacherComparisonChart");
-      if (!ctx) return;
-      chartInstances.teacherComparisonChart?.destroy?.();
-      chartInstances.teacherComparisonChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: ["Math", "Physics", "Chemistry", "Biology", "English"],
-          datasets: [{
-            label: "Avg %",
-            data: [91, 88, 86, 89, 93],
-            backgroundColor: "rgba(59,130,246,0.6)",
-            borderColor: "rgba(59,130,246,1)",
-            borderWidth: 1,
-            borderRadius: 6,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, max: 100 },
-            x: { grid: { display: false } }
-          },
-          plugins: { legend: { display: false } },
-        },
-      });
-    }
-
-    function initAdminOverallChart() {
-      const ctx = qs("#adminOverallChart");
-      if (!ctx) return;
-      chartInstances.adminOverallChart?.destroy?.();
-      chartInstances.adminOverallChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["Present", "Late", "Absent"],
-          datasets: [{
-            data: [78, 8, 14],
-            backgroundColor: ["#10b981", "#f59e0b", "#ef4444"],
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom" } },
-          cutout: "60%",
-        },
-      });
-    }
-
-    function initAdminTrendChart() {
-      const ctx = qs("#adminTrendChart");
-      if (!ctx) return;
-      chartInstances.adminTrendChart?.destroy?.();
-      chartInstances.adminTrendChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-          datasets: [{
-            label: "Attendance %",
-            data: [87, 88, 86, 89, 90, 92],
-            borderColor: "rgba(59,130,246,1)",
-            backgroundColor: "rgba(59,130,246,0.2)",
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, max: 100 },
-            x: { grid: { display: false } }
-          },
-          plugins: { legend: { display: false } },
-        },
-      });
-    }
-
-    // --- Content builders ---
-    function studentContent() {
-      return `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
-            <div class="flex items-center justify-between">
-              <p class="text-sm text-gray-500">This Week</p>
-              <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+2%</span>
-            </div>
-            <p class="mt-1 text-2xl font-semibold text-gray-800">92%</p>
-          </div>
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
-            <p class="text-sm text-gray-500">Classes Attended</p>
-            <p class="mt-1 text-2xl font-semibold text-gray-800">18/20</p>
-          </div>
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border hover-lift">
-            <p class="text-sm text-gray-500">Streak</p>
-            <p class="mt-1 text-2xl font-semibold text-gray-800">6 days</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-2">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Subject-wise Attendance</h3>
-              <button class="text-sm text-primary hover:underline">View details</button>
-            </div>
-            <canvas id="studentAttendanceChart"></canvas>
-          </div>
-
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
-            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-3">Upcoming Classes</h3>
-            <ul class="space-y-3">
-              <li class="flex items-center justify-between">
-                <div>
-                  <p class="font-medium text-gray-800">Math - Algebra</p>
-                  <p class="text-xs text-gray-500">09:00 AM - Room 204</p>
-                </div>
-                <span class="text-xs px-2 py-1 rounded bg-indigo-50 text-indigo-700">Today</span>
-              </li>
-              <li class="flex items-center justify-between">
-                <div>
-                  <p class="font-medium text-gray-800">Physics - Motion</p>
-                  <p class="text-xs text-gray-500">11:00 AM - Lab 3</p>
-                </div>
-                <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Tomorrow</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Recent Attendance</h3>
-            <div class="flex items-center gap-2">
-              <button class="px-2 py-1 text-sm border rounded">Export</button>
-            </div>
-          </div>
-
-          <div class="scrollable-table-container overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marked By</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr>
-                  <td>2025-09-18</td>
-                  <td>Mathematics</td>
-                  <td><span class="px-2 py-1 rounded text-xs bg-green-50 text-green-700">Present</span></td>
-                  <td>Mr. Smith</td>
-                  <td><button class="text-primary text-sm">View</button></td>
-                </tr>
-                <tr>
-                  <td>2025-09-17</td>
-                  <td>Physics</td>
-                  <td><span class="px-2 py-1 rounded text-xs bg-red-50 text-red-700">Absent</span></td>
-                  <td>Ms. Davis</td>
-                  <td><button class="text-primary text-sm">View</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function teacherContent() {
-      return `
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Class Analytics</h3>
-              <button class="text-sm text-primary hover:underline">Filters</button>
-            </div>
-            <canvas id="teacherAnalyticsChart"></canvas>
-          </div>
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Subject Comparison</h3>
-            </div>
-            <canvas id="teacherComparisonChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Recent Attendance</h3>
-            <button class="px-2 py-1 text-sm border rounded">Add Record</button>
-          </div>
-
-          <div class="scrollable-table-container overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marked By</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr>
-                  <td>2025-09-19</td>
-                  <td>10A</td>
-                  <td>28</td>
-                  <td>2</td>
-                  <td>A. Gupta</td>
-                  <td><button class="text-primary text-sm">Edit</button></td>
-                </tr>
-                <tr>
-                  <td>2025-09-18</td>
-                  <td>10B</td>
-                  <td>27</td>
-                  <td>3</td>
-                  <td>A. Gupta</td>
-                  <td><button class="text-primary text-sm">Edit</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function adminContent() {
-      return `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-1">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Overall Status</h3>
-            </div>
-            <canvas id="adminOverallChart"></canvas>
-          </div>
-          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border chart-auto lg:col-span-2">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Monthly Trend</h3>
-            </div>
-            <canvas id="adminTrendChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md border">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Users</h3>
-            <div class="flex items-center gap-2">
-              <button class="px-2 py-1 text-sm border rounded">Invite</button>
-            </div>
-          </div>
-
-          <div class="scrollable-table-container overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr>
-                  <td>Alex Johnson</td>
-                  <td>alex.johnson@example.com</td>
-                  <td>Admin</td>
-                  <td><span class="px-2 py-1 rounded text-xs bg-green-50 text-green-700">Active</span></td>
-                  <td><button class="text-primary text-sm">Manage</button></td>
-                </tr>
-                <tr>
-                  <td>Meera Shah</td>
-                  <td>meera.shah@example.com</td>
-                  <td>Teacher</td>
-                  <td><span class="px-2 py-1 rounded text-xs bg-yellow-50 text-yellow-700">Pending</span></td>
-                  <td><button class="text-primary text-sm">Manage</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    function dashboardTitleFor(role) {
-      if (role === "student") return "Student Dashboard";
-      if (role === "teacher") return "Teacher Dashboard";
-      return "Admin Dashboard";
-    }
-
-    function render() {
-      qs("#pageTitle").textContent = dashboardTitleFor(currentRole);
-
-      if (currentRole === "student") {
-        qs("#content").innerHTML = studentContent();
-        initStudentChart();
-      } else if (currentRole === "teacher") {
-        qs("#content").innerHTML = teacherContent();
-        initTeacherChart();
-        initTeacherComparisonChart();
+      if (role === "student") {
+        if (section === "dashboard") c.innerHTML = studentDashboardHTML();
+        if (section === "attendance") c.innerHTML = studentAttendanceHTML();
+        if (section === "students") c.innerHTML = studentStudentsHTML();
+        if (section === "teachers") c.innerHTML = studentTeachersHTML();
+        if (section === "reports") c.innerHTML = studentReportsHTML();
+        initStudentDashboard(section);
+      } else if (role === "teacher") {
+        if (section === "dashboard") c.innerHTML = teacherDashboardHTML();
+        if (section === "attendance") c.innerHTML = teacherAttendanceHTML();
+        if (section === "students") c.innerHTML = teacherStudentsHTML();
+        if (section === "teachers") c.innerHTML = teacherTeachersHTML();
+        if (section === "reports") c.innerHTML = teacherReportsHTML();
+        initTeacherDashboard(section);
       } else {
-        qs("#content").innerHTML = adminContent();
-        initAdminOverallChart();
-        initAdminTrendChart();
+        if (section === "dashboard") c.innerHTML = adminDashboardHTML();
+        if (section === "attendance") c.innerHTML = adminAttendanceHTML();
+        if (section === "students") c.innerHTML = adminStudentsHTML();
+        if (section === "teachers") c.innerHTML = adminTeachersHTML();
+        if (section === "reports") c.innerHTML = adminReportsHTML();
+        initAdminDashboard(section);
+      }
+    }
+
+    // --------- Student Views ----------
+    function studentDashboardHTML() {
+      return `
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div class="xl:col-span-3 card p-4 sm:p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-semibold">Check-in</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button id="startCamBtn" class="px-3 py-2 border rounded-lg bg-white">Start Camera</button>
+                <button id="stopCamBtn" class="px-3 py-2 border rounded-lg bg-white hidden">Stop</button>
+                <button id="locBtn" class="px-3 py-2 rounded-lg bg-indigo-600 text-white">Get Location</button>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <div class="video-wrap">
+                  <video id="studentVideo" autoplay playsinline muted></video>
+                </div>
+                <p id="camStatus" class="text-xs text-gray-500 mt-2">Camera: idle</p>
+              </div>
+              <div class="card p-4">
+                <p class="text-sm text-gray-600">Location</p>
+                <p id="locText" class="mt-1 text-sm">Not requested</p>
+                <a id="mapLink" href="#" target="_blank" class="text-indigo-600 text-sm hidden">Open in Google Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="xl:col-span-1 card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Attendance Overview</h3>
+            </div>
+            <div class="chart-box">
+              <canvas id="studentPie"></canvas>
+            </div>
+          </div>
+
+          <div class="xl:col-span-2 card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Attendance History</h3>
+            </div>
+            <div class="scrollable-table">
+              <table class="min-w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Subject</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="studentHistory" class="divide-y divide-gray-200">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function studentAttendanceHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">Mark Attendance</h3>
+          <p class="text-sm text-gray-600">Use camera and location from dashboard to verify presence; this section summarizes today’s status.</p>
+          <div class="mt-3 chart-box"><canvas id="studentPie2"></canvas></div>
+        </div>
+      `;
+    }
+
+    function studentStudentsHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">Classmates</h3>
+          <div class="scrollable-table">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                ${sampleStudents.map(s => `
+                  <tr>
+                    <td class="px-3 py-2">${s.name}</td>
+                    <td class="px-3 py-2">${s.class}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function studentTeachersHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">My Teachers</h3>
+          <ul class="space-y-2 text-sm">
+            <li>Mrs. Gupta — Mathematics</li>
+            <li>Mr. Nair — Physics</li>
+            <li>Dr. Das — Chemistry</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function studentReportsHTML() {
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="card p-4">
+            <p class="text-sm text-gray-600">Total Sessions</p>
+            <p class="text-2xl font-semibold mt-1">40</p>
+          </div>
+          <div class="card p-4">
+            <p class="text-sm text-gray-600">Present</p>
+            <p class="text-2xl font-semibold mt-1">34</p>
+          </div>
+          <div class="card p-4">
+            <p class="text-sm text-gray-600">Absent</p>
+            <p class="text-2xl font-semibold mt-1">6</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // --------- Teacher Views ----------
+    function teacherDashboardHTML() {
+      return `
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div class="xl:col-span-2 card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Attendance by Class</h3>
+            </div>
+            <div class="chart-box"><canvas id="teacherBar"></canvas></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold mb-2">Quick Tips</h3>
+            <p class="text-sm text-gray-600">Use the Students section to mark present/absent for quick roll call.</p>
+          </div>
+
+          <div class="xl:col-span-3 card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold">Students</h3>
+            </div>
+            <div class="scrollable-table">
+              <table class="min-w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="teacherList" class="divide-y divide-gray-200">
+                  ${sampleStudents.map(s => `
+                    <tr data-id="${s.id}">
+                      <td class="px-3 py-2">${s.name}</td>
+                      <td class="px-3 py-2">${s.class}</td>
+                      <td class="px-3 py-2"><span class="inline-block text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Not marked</span></td>
+                      <td class="px-3 py-2 space-x-2">
+                        <button class="present px-2 py-1 text-xs rounded bg-green-50 text-green-700">Present</button>
+                        <button class="absent px-2 py-1 text-xs rounded bg-red-50 text-red-700">Absent</button>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function teacherAttendanceHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-2">Today’s Classes</h3>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>10A — Mathematics — 9:00 AM</li>
+            <li>10B — Physics — 11:00 AM</li>
+            <li>11A — Chemistry — 1:00 PM</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function teacherStudentsHTML() {
+      return teacherDashboardHTML();
+    }
+
+    function teacherTeachersHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-2">Departments</h3>
+          <ul class="text-sm space-y-1">
+            <li>Mathematics</li><li>Physics</li><li>Chemistry</li><li>Biology</li><li>English</li><li>Computer Science</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function teacherReportsHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">Summary</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="card p-4"><p class="text-sm text-gray-600">Total Students</p><p class="text-2xl font-semibold mt-1">120</p></div>
+            <div class="card p-4"><p class="text-sm text-gray-600">Avg Attendance</p><p class="text-2xl font-semibold mt-1">88%</p></div>
+            <div class="card p-4"><p class="text-sm text-gray-600">Classes Today</p><p class="text-2xl font-semibold mt-1">3</p></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --------- Admin Views ----------
+    function adminDashboardHTML() {
+      return `
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div class="xl:col-span-2 card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Overall Trend</h3>
+            </div>
+            <div class="chart-box"><canvas id="adminLine"></canvas></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="font-semibold mb-2">Class Comparison</h3>
+            <div class="chart-box"><canvas id="adminBar"></canvas></div>
+          </div>
+          <div class="xl:col-span-3 card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Reports</h3>
+            </div>
+            <div class="scrollable-table">
+              <table class="min-w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Title</th>
+                    <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr><td class="px-3 py-2">2025-09-18</td><td class="px-3 py-2">Monthly Attendance Summary</td><td class="px-3 py-2">Published</td></tr>
+                  <tr><td class="px-3 py-2">2025-09-12</td><td class="px-3 py-2">Department-wise Analysis</td><td class="px-3 py-2">Draft</td></tr>
+                  <tr><td class="px-3 py-2">2025-09-05</td><td class="px-3 py-2">Weekly Trend Report</td><td class="px-3 py-2">Published</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminAttendanceHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">Attendance Log</h3>
+          <div class="scrollable-table">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Date</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Present</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Absent</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr><td class="px-3 py-2">2025-09-19</td><td class="px-3 py-2">10A</td><td class="px-3 py-2">28</td><td class="px-3 py-2">2</td></tr>
+                <tr><td class="px-3 py-2">2025-09-18</td><td class="px-3 py-2">10B</td><td class="px-3 py-2">27</td><td class="px-3 py-2">3</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminStudentsHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">All Students</h3>
+          <div class="scrollable-table">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Class</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                ${sampleStudents.map(s => `<tr><td class="px-3 py-2">${s.name}</td><td class="px-3 py-2">${s.class}</td></tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminTeachersHTML() {
+      return `
+        <div class="card p-4">
+          <h3 class="font-semibold mb-3">All Teachers</h3>
+          <div class="scrollable-table">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Name</th>
+                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Department</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr><td class="px-3 py-2">Mrs. Gupta</td><td class="px-3 py-2">Mathematics</td></tr>
+                <tr><td class="px-3 py-2">Mr. Nair</td><td class="px-3 py-2">Physics</td></tr>
+                <tr><td class="px-3 py-2">Dr. Das</td><td class="px-3 py-2">Chemistry</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function adminReportsHTML() {
+      return adminDashboardHTML();
+    }
+
+    // --------- Init Dashboards ----------
+    function initStudentDashboard(section) {
+      // Charts
+      if (section === "dashboard") {
+        // Pie
+        const ctx = qs("#studentPie");
+        if (ctx && window.Chart) {
+          appState.charts.studentPie = new Chart(ctx, {
+            type: "doughnut",
+            data: { labels: ["Present","Absent"], datasets: [{ data: [34,6], backgroundColor: ["#10b981","#ef4444"] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:"bottom"} }, cutout: "60%" }
+          });
+        }
+        // History
+        const hist = qs("#studentHistory");
+        if (hist) {
+          const rows = [
+            { date: "2025-09-18", subject: "Math", status: "Present" },
+            { date: "2025-09-17", subject: "Physics", status: "Absent" },
+            { date: "2025-09-16", subject: "Chemistry", status: "Present" },
+            { date: "2025-09-15", subject: "Biology", status: "Present" },
+          ];
+          hist.innerHTML = rows.map(r => `
+            <tr>
+              <td class="px-3 py-2">${r.date}</td>
+              <td class="px-3 py-2">${r.subject}</td>
+              <td class="px-3 py-2">
+                <span class="text-xs px-2 py-1 rounded ${r.status==="Present"?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}">${r.status}</span>
+              </td>
+            </tr>
+          `).join("");
+        }
+
+        // Camera & Location
+        wireStudentCameraAndLocation();
       }
 
-      applyResponsiveTables();
-      resizeCharts();
+      if (section === "attendance") {
+        const ctx2 = qs("#studentPie2");
+        if (ctx2 && window.Chart) {
+          appState.charts.studentPie2 = new Chart(ctx2, {
+            type: "doughnut",
+            data: { labels: ["Present","Absent"], datasets: [{ data: [3,1], backgroundColor: ["#3b82f6","#f59e0b"] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ position:"bottom"} }, cutout: "60%" }
+          });
+        }
+      }
     }
 
-    // --- Auth + role switching (demo only) ---
-    qs("#loginTab").addEventListener("click", (e) => {
-      e.preventDefault();
-      qs("#loginForm").classList.remove("hidden");
-      qs("#registerForm").classList.add("hidden");
-      qs("#loginTab").classList.add("bg-primary", "text-white");
-      qs("#registerTab").classList.remove("bg-primary", "text-white");
-    });
-    qs("#registerTab").addEventListener("click", (e) => {
-      e.preventDefault();
-      qs("#loginForm").classList.add("hidden");
-      qs("#registerForm").classList.remove("hidden");
-      qs("#registerTab").classList.add("bg-primary", "text-white");
-      qs("#loginTab").classList.remove("bg-primary", "text-white");
-    });
+    function initTeacherDashboard(section) {
+      if (section === "dashboard") {
+        // Bar
+        const ctx = qs("#teacherBar");
+        if (ctx && window.Chart) {
+          appState.charts.teacherBar = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["10A","10B","11A","11B","12A","12B"],
+              datasets: [{ label:"Present %", data: [90,86,88,84,92,89], backgroundColor: "#6366f1", borderRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
+          });
+        }
 
-    qs("#loginForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      currentRole = qs("#loginRole").value;
-      qs("#authModal").classList.add("hidden");
-      qs("#roleSwitcher").value = currentRole;
-      render();
-    });
-
-    qs("#roleSwitcher").addEventListener("change", (e) => {
-      currentRole = e.target.value;
-      render();
-    });
-
-    // --- Sidebar controls ---
-    const sidebar = qs("#sidebar");
-    const sidebarOverlay = qs("#sidebarOverlay");
-    const openSidebarBtn = qs("#openSidebarBtn");
-    const closeSidebarBtn = qs("#closeSidebarBtn");
-
-    function openSidebar() {
-      sidebar.classList.remove("-translate-x-full");
-      sidebarOverlay.classList.remove("hidden");
-    }
-    function closeSidebar() {
-      sidebar.classList.add("-translate-x-full");
-      sidebarOverlay.classList.add("hidden");
+        // Marking
+        const tbody = qs("#teacherList");
+        if (tbody) {
+          tbody.onclick = (e) => {
+            const row = e.target.closest("tr");
+            if (!row) return;
+            const id = row.dataset.id;
+            const badge = row.querySelector("td:nth-child(3) span");
+            if (e.target.classList.contains("present")) {
+              teacherRowStatus[id] = "Present";
+              badge.textContent = "Present";
+              badge.className = "inline-block text-xs px-2 py-1 rounded bg-green-50 text-green-700";
+            }
+            if (e.target.classList.contains("absent")) {
+              teacherRowStatus[id] = "Absent";
+              badge.textContent = "Absent";
+              badge.className = "inline-block text-xs px-2 py-1 rounded bg-red-50 text-red-700";
+            }
+          };
+        }
+      }
     }
 
-    openSidebarBtn.addEventListener("click", openSidebar);
-    closeSidebarBtn.addEventListener("click", closeSidebar);
-    sidebarOverlay.addEventListener("click", closeSidebar);
+    function initAdminDashboard(section) {
+      if (section === "dashboard") {
+        const line = qs("#adminLine");
+        if (line && window.Chart) {
+          appState.charts.adminLine = new Chart(line, {
+            type: "line",
+            data: {
+              labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep"],
+              datasets: [{ label: "Attendance %", data: [86,88,85,89,91,90,92,93,94], borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.15)", tension: 0.35, fill: true }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
+          });
+        }
+        const bar = qs("#adminBar");
+        if (bar && window.Chart) {
+          appState.charts.adminBar = new Chart(bar, {
+            type: "bar",
+            data: { labels: ["10A","10B","11A","11B","12A","12B"], datasets: [{ label:"Avg %", data:[91,87,88,86,92,89], backgroundColor:"#10b981", borderRadius:6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } }
+          });
+        }
+      }
+    }
 
-    // --- Profile dropdown ---
-    const profileBtn = qs("#profileBtn");
-    const profileDropdown = qs("#profileDropdown");
-    profileBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileDropdown.classList.toggle("hidden");
-    });
-    document.addEventListener("click", () => profileDropdown.classList.add("hidden"));
+    // --------- Camera & Geolocation (Student) ----------
+    let activeStream = null;
+    async function startCamera(videoEl) {
+      if (activeStream) stopCamera();
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      videoEl.srcObject = stream;
+      await new Promise(res => { videoEl.onloadedmetadata = () => { videoEl.play(); res(); }; });
+      activeStream = stream;
+    }
+    function stopCamera() {
+      try { activeStream?.getTracks()?.forEach(t => t.stop()); } catch {}
+      activeStream = null;
+    }
 
-    // --- Sign out (demo) ---
-    qs("#signOutBtn").addEventListener("click", () => {
-      location.reload();
-    });
+    function wireStudentCameraAndLocation() {
+      const video = qs("#studentVideo");
+      const startBtn = qs("#startCamBtn");
+      const stopBtn = qs("#stopCamBtn");
+      const camStatus = qs("#camStatus");
+      const locBtn = qs("#locBtn");
+      const locText = qs("#locText");
+      const mapLink = qs("#mapLink");
 
-    // --- Nav link demo handlers ---
-    qsa(".nav-link").forEach(a => {
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        currentSection = a.dataset.target;
-        render();
+      startBtn.onclick = async () => {
+        try {
+          camStatus.textContent = "Camera: requesting permission…";
+          await startCamera(video);
+          camStatus.textContent = "Camera: live";
+          startBtn.classList.add("hidden");
+          stopBtn.classList.remove("hidden");
+        } catch (e) {
+          camStatus.textContent = "Camera: unavailable or permission denied";
+        }
+      };
+      stopBtn.onclick = () => {
+        stopCamera();
+        camStatus.textContent = "Camera: stopped";
+        stopBtn.classList.add("hidden");
+        startBtn.classList.remove("hidden");
+      };
+
+      locBtn.onclick = () => {
+        locText.textContent = "Getting current position…";
+        if (!navigator.geolocation) {
+          locText.textContent = "Geolocation not supported";
+          return;
+        }
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const { latitude, longitude, accuracy } = pos.coords;
+          locText.textContent = `Lat ${latitude.toFixed(5)}, Lng ${longitude.toFixed(5)} (±${Math.round(accuracy)}m)`;
+          mapLink.href = `https://maps.google.com/?q=${latitude},${longitude}`;
+          mapLink.classList.remove("hidden");
+        }, (err) => {
+          locText.textContent = `Location error: ${err.message}`;
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+      };
+    }
+
+    // --------- Init App ----------
+    function init() {
+      secureBanner();
+      wireLayout();
+      renderAuthModal(!appState.currentUser);
+      updateProfile();
+      renderDashboard(appState.currentRole, appState.currentSection);
+
+      // Resize charts on window resize
+      window.addEventListener("resize", () => {
+        Object.values(appState.charts).forEach(c => { try { c.resize(); } catch {} });
       });
-    });
+    }
 
-    // --- Initial load ---
-    window.addEventListener("resize", debounce(applyResponsiveTables, 150));
-    window.addEventListener("resize", resizeCharts);
-    document.addEventListener("DOMContentLoaded", () => {
-      // Default to login modal visible; close it for demo
-      // qs("#authModal").classList.add("hidden"); // Uncomment to skip auth
-    });
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
